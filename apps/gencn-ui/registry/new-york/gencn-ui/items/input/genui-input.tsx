@@ -391,15 +391,36 @@ export const GenUIInput = React.forwardRef<HTMLInputElement, GenUIInputProps>(
       setDetected(null);
     }, []);
 
-    const openTranslate = React.useCallback(() => {
+    const openTranslate = React.useCallback(async () => {
       setActiveFeature("translate");
       setIsFeatureOpen(true);
       setPhase("prompt");
       setResultText("");
       setAiError(null);
       setDownloadProgress(null);
-      setDetected(null);
-      setSelectedTarget(translateTargets?.[0] || "");
+      
+      // Detect language when modal opens
+      const text = inputRef.current?.value || "";
+      let detectedSource: string | null = null;
+      if (text.trim()) {
+        try {
+          const detectedLangs = await detectLanguages(text);
+          setDetected(detectedLangs);
+          if (detectedLangs && detectedLangs.length > 0) {
+            detectedSource = detectedLangs[0].detectedLanguage;
+          }
+        } catch {
+          setDetected(null);
+        }
+      } else {
+        setDetected(null);
+      }
+      
+      // Preselect first provided target that is not the detected source language
+      const availableTargets = translateTargets?.filter((code: string) => {
+        return !detectedSource || code !== detectedSource;
+      }) || [];
+      setSelectedTarget(availableTargets[0] || "");
     }, [translateTargets]);
 
     const startTranslate = React.useCallback(async () => {
@@ -1294,11 +1315,19 @@ export const GenUIInput = React.forwardRef<HTMLInputElement, GenUIInputProps>(
                       <SelectValue placeholder="Select target language" />
                     </SelectTrigger>
                     <SelectContent>
-                      {translateTargets?.map((code: string) => (
-                        <SelectItem key={code} value={code}>
-                          {translateLanguageMap?.[code] || code}
-                        </SelectItem>
-                      ))}
+                      {translateTargets
+                        ?.filter((code: string) => {
+                          // Exclude detected source language from target options
+                          if (detected && detected.length > 0) {
+                            return code !== detected[0].detectedLanguage;
+                          }
+                          return true;
+                        })
+                        .map((code: string) => (
+                          <SelectItem key={code} value={code}>
+                            {translateLanguageMap?.[code] || code}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
