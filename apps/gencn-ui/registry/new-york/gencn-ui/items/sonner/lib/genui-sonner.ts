@@ -112,7 +112,7 @@ export type AITone =
   | "concise"
   | "motivational";
 
-export const AISONNER_TONES: AITone[] = [
+export const GenUISONNER_TONES: AITone[] = [
   "friendly",
   "funny",
   "sarcastic",
@@ -125,7 +125,7 @@ export const AISONNER_TONES: AITone[] = [
   "motivational",
 ];
 
-export type AISONNEROptions = ExternalToast & {
+export type GenUISONNEROptions = ExternalToast & {
   tone?: AITone;
   maxLength?: number;
   retryOnFail?: boolean;
@@ -161,14 +161,14 @@ async function rewriteIfString(
 }
 
 function isExternalToastOptions(
-  opts?: ExternalToast | AISONNEROptions
-): opts is AISONNEROptions {
+  opts?: ExternalToast | GenUISONNEROptions
+): opts is GenUISONNEROptions {
   return !!opts;
 }
 
-export async function aiToast(
+export async function genUIToast(
   message: React.ReactNode,
-  options?: AISONNEROptions
+  options?: GenUISONNEROptions
 ) {
   const rewritten = await rewriteIfString(
     message,
@@ -179,9 +179,9 @@ export async function aiToast(
   return toast(rewritten, options);
 }
 
-aiToast.success = async function (
+genUIToast.success = async function (
   message: React.ReactNode,
-  options?: AISONNEROptions
+  options?: GenUISONNEROptions
 ) {
   const rewritten = await rewriteIfString(
     message,
@@ -192,9 +192,9 @@ aiToast.success = async function (
   return toast.success(rewritten, options);
 };
 
-aiToast.error = async function (
+genUIToast.error = async function (
   message: React.ReactNode,
-  options?: AISONNEROptions
+  options?: GenUISONNEROptions
 ) {
   const rewritten = await rewriteIfString(
     message,
@@ -205,9 +205,9 @@ aiToast.error = async function (
   return toast.error(rewritten, options);
 };
 
-aiToast.info = async function (
+genUIToast.info = async function (
   message: React.ReactNode,
-  options?: AISONNEROptions
+  options?: GenUISONNEROptions
 ) {
   const rewritten = await rewriteIfString(
     message,
@@ -218,9 +218,9 @@ aiToast.info = async function (
   return toast.info(rewritten, options);
 };
 
-aiToast.warning = async function (
+genUIToast.warning = async function (
   message: React.ReactNode,
-  options?: AISONNEROptions
+  options?: GenUISONNEROptions
 ) {
   const rewritten = await rewriteIfString(
     message,
@@ -231,9 +231,9 @@ aiToast.warning = async function (
   return toast.warning(rewritten, options);
 };
 
-aiToast.message = async function (
+genUIToast.message = async function (
   message: React.ReactNode,
-  options?: AISONNEROptions
+  options?: GenUISONNEROptions
 ) {
   const rewritten = await rewriteIfString(
     message,
@@ -244,26 +244,26 @@ aiToast.message = async function (
   return toast.message(rewritten as any, options as any);
 };
 
-aiToast.loading = function (
+genUIToast.loading = function (
   message: React.ReactNode,
-  options?: AISONNEROptions
+  options?: GenUISONNEROptions
 ) {
   // For loading, show immediately; do not wait for rewriting to avoid UX delay.
   return toast.loading(message, options);
 };
 
-aiToast.custom = function (
+genUIToast.custom = function (
   renderer: Parameters<typeof toast.custom>[0],
   options?: ExternalToast
 ) {
   return toast.custom(renderer, options);
 };
 
-aiToast.dismiss = function (toastId?: number | string) {
+genUIToast.dismiss = function (toastId?: number | string) {
   return toast.dismiss(toastId as any);
 };
 
-aiToast.promise = async function <T>(
+genUIToast.promise = async function <T>(
   promise: Promise<T>,
   cfg: {
     loading: React.ReactNode;
@@ -273,7 +273,7 @@ aiToast.promise = async function <T>(
     maxLength?: number;
     retryOnFail?: boolean;
   },
-  options?: AISONNEROptions
+  options?: GenUISONNEROptions
 ) {
   // Show loading immediately (without waiting for rewrite)
   const id = toast.loading(cfg.loading, options);
@@ -305,4 +305,4 @@ aiToast.promise = async function <T>(
 // Re-export Toaster passthrough for convenience if consumers need to render it.
 export { Toaster } from "sonner";
 
-export type AIToastType = typeof aiToast;
+export type GenUIToastType = typeof genUIToast;

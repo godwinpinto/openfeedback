@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { GenUII18nText } from "@/components/genui-i18n-text";
 import { GenUITextarea } from "@/components/genui-textarea";
-import { AISONNER_TONES, aiToast, Toaster } from "@/lib/genui-sonner";
+import { GenUISONNER_TONES, genUIToast, Toaster } from "@/lib/genui-sonner";
 import { GenUISummarizerProvider, GenUISummarizerText, GenUISummarizerContent } from "@/components/genui-summarize-block";
 import { GenUIHumanVerification } from "@/components/genui-human-verification";
 import { GenUIInput } from "@/components/genui-input";
@@ -25,7 +25,7 @@ export default function Home() {
 
   const triggerToast = () => {
     const msg = randomMessages[Math.floor(Math.random() * randomMessages.length)];
-    aiToast(msg, { tone: tone as any });
+    genUIToast(msg, { tone: tone as any });
   };
   return (
     <div className="flex min-h-screen items-center justify-center bg-background font-sans">
@@ -48,7 +48,7 @@ export default function Home() {
                   <SelectValue placeholder="Select tone" />
                 </SelectTrigger>
                 <SelectContent>
-                  {AISONNER_TONES.map((t) => (
+                  {GenUISONNER_TONES.map((t) => (
                     <SelectItem key={t} value={t}>
                       {t}
                     </SelectItem>
