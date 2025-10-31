@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, XCircle, Loader2, Camera } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, Camera, Info } from 'lucide-react';
 
 // Type guard for browser environment
 const isBrowser = typeof window !== 'undefined';
@@ -56,18 +56,23 @@ export interface GenUIHumanVerificationProps {
 }
 
 type VerificationState = 
-  | 'idle' 
-  | 'camera-open' 
-  | 'capturing' 
-  | 'verifying' 
-  | 'verified' 
-  | 'failed';
+  | 'idle'               // Initial state, button visible
+  | 'generating'         // Generating instruction
+  | 'prompting'          // Dialog open, "Start Camera" button visible
+  | 'starting-camera'    // "Start Camera" clicked, waiting for stream
+  | 'countdown'          // Camera open, 5s timer running
+  | 'verifying'          // Image captured, analysis in progress
+  | 'failed-attempt'     // Verification failed, "Retry" button visible
+  | 'success'            // Final success state, dialog closed
+  | 'failed-final';      // Final failed state (max attempts), dialog closed
 
 interface VerificationResult {
   success: boolean;
   confidence?: number;
   reason?: string;
 }
+
+const MAX_ATTEMPTS = 3;
 
 export const GenUIHumanVerification: React.FC<GenUIHumanVerificationProps> = ({
   instruction: propInstruction,
@@ -79,8 +84,12 @@ export const GenUIHumanVerification: React.FC<GenUIHumanVerificationProps> = ({
   buttonText = 'Verify you are human',
 }) => {
   const [state, setState] = React.useState<VerificationState>('idle');
-  const [error, setError] = React.useState<string | null>(null);
-  const [verificationResult, setVerificationResult] = React.useState<VerificationResult | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
+  const [lastFailureReason, setLastFailureReason] = React.useState<string | null>(null);
+  const [attemptCount, setAttemptCount] = React.useState(1);
+  const [countdownValue, setCountdownValue] = React.useState<number | null>(null);
+  
   const [isStreamReady, setIsStreamReady] = React.useState(false);
   const [generatedInstruction, setGeneratedInstruction] = React.useState<string | null>(null);
   const [isGeneratingInstruction, setIsGeneratingInstruction] = React.useState(false);
@@ -88,10 +97,9 @@ export const GenUIHumanVerification: React.FC<GenUIHumanVerificationProps> = ({
   // Use prop instruction if provided, otherwise use generated instruction
   const instruction = propInstruction || generatedInstruction || 'Take your selfie following the instructions below';
   
-  // Keep instruction ref up to date (always has the latest instruction value)
+  // Keep instruction ref up to date
   React.useEffect(() => {
     instructionRef.current = instruction;
-    console.log('[AIHumanVerification] Instruction updated in ref:', instruction);
   }, [instruction]);
   
   const videoRef = React.useRef<HTMLVideoElement>(null);
@@ -99,14 +107,16 @@ export const GenUIHumanVerification: React.FC<GenUIHumanVerificationProps> = ({
   const streamRef = React.useRef<MediaStream | null>(null);
   const sessionRef = React.useRef<any>(null);
   const instructionRef = React.useRef<string>('');
+  const countdownTimerRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup function
-  const cleanup = React.useCallback(() => {
+  const fullCleanup = React.useCallback(() => {
     // Stop camera stream
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
+    setIsStreamReady(false);
     
     // Destroy language model session
     if (sessionRef.current) {
@@ -120,30 +130,59 @@ export const GenUIHumanVerification: React.FC<GenUIHumanVerificationProps> = ({
       }
       sessionRef.current = null;
     }
+    
+    // Clear any pending timer
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    setCountdownValue(null);
   }, []);
 
   // Cleanup on unmount
   React.useEffect(() => {
     return () => {
-      cleanup();
+      fullCleanup();
     };
-  }, [cleanup]);
+  }, [fullCleanup]);
+  
+  // Handle dialog open/close
+  const handleOpenChange = React.useCallback((open: boolean) => {
+    if (!open) {
+      fullCleanup();
+      setIsDialogOpen(false);
+      // Only reset to idle if not in a final success/fail state
+      if (state !== 'success' && state !== 'failed-final') {
+        setState('idle');
+      }
+    }
+  }, [fullCleanup, state]);
+  
+  const closeDialogWithDelay = React.useCallback(() => {
+     setTimeout(() => {
+       setIsDialogOpen(false);
+       // The onOpenChange handler will do the full cleanup
+     }, 100);
+  }, []);
 
   const startCamera = React.useCallback(async () => {
+    if (streamRef.current) {
+      // Camera is already running
+      startCountdown();
+      return;
+    }
+    
     try {
-      setError(null);
+      setStatusMessage('Starting camera...');
+      setState('starting-camera');
       
-      // Check if we're in browser environment
       if (!isBrowser || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Camera access is only available in browser environment.');
+        throw new Error('Camera access is not available in this browser.');
       }
       
-      setState('camera-open'); // Set state first to show UI
-      
-      // Request camera access
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
-          facingMode: 'user', // Front-facing camera for selfie
+          facingMode: 'user',
           width: { ideal: 1280 },
           height: { ideal: 720 }
         },
@@ -153,60 +192,76 @@ export const GenUIHumanVerification: React.FC<GenUIHumanVerificationProps> = ({
       streamRef.current = stream;
       setIsStreamReady(false);
       
-      // Set video stream and wait for it to be ready
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         
-        // Wait for video metadata to load
-        await new Promise((resolve) => {
-          if (videoRef.current) {
-            const handleLoadedMetadata = () => {
-              if (videoRef.current) {
-                videoRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
-              }
-              resolve(void 0);
-            };
-            videoRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
-            
-            // Fallback timeout
-            setTimeout(() => {
-              if (videoRef.current) {
-                videoRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
-                resolve(void 0);
-              }
-            }, 2000);
-          }
+        await new Promise<void>((resolve, reject) => {
+          if (!videoRef.current) return reject(new Error('Video ref lost'));
+          const onLoadedMetadata = () => {
+            videoRef.current?.removeEventListener('loadedmetadata', onLoadedMetadata);
+            resolve();
+          };
+          videoRef.current.addEventListener('loadedmetadata', onLoadedMetadata);
+          setTimeout(() => {
+             videoRef.current?.removeEventListener('loadedmetadata', onLoadedMetadata);
+             reject(new Error('Camera metadata timeout'));
+          }, 3000);
         });
         
         await videoRef.current.play();
         setIsStreamReady(true);
+        startCountdown();
       }
     } catch (err) {
       const error = err as Error;
-      setError(`Failed to access camera: ${error.message}`);
-      setState('idle');
+      setStatusMessage(`Failed to access camera: ${error.message}`);
+      setState('prompting'); // Go back to "Start Camera"
       setIsStreamReady(false);
-      cleanup();
       onError?.(error);
     }
-  }, [onError, cleanup]);
+  }, [onError]); // Removed startCountdown from deps, it's called internally
 
-  const captureImage = React.useCallback(async () => {
+  const startCountdown = React.useCallback(() => {
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+    }
+    
+    setState('countdown');
+    setCountdownValue(5);
+    setStatusMessage('Capturing in 5s...');
+
+    countdownTimerRef.current = setInterval(() => {
+      setCountdownValue(prev => {
+        if (prev === null || prev <= 1) {
+          clearInterval(countdownTimerRef.current!);
+          countdownTimerRef.current = null;
+          setStatusMessage('Capturing...');
+          captureAndVerify();
+          return null;
+        }
+        setStatusMessage(`Capturing in ${prev - 1}s...`);
+        return prev - 1;
+      });
+    }, 1000);
+  }, []); // captureAndVerify is stable as it uses refs/setters
+
+  const captureAndVerify = React.useCallback(async () => {
     if (!videoRef.current || !canvasRef.current) {
+      setStatusMessage('Capture failed: Missing video reference.');
+      setState('failed-attempt');
       return;
     }
 
     try {
-      setState('capturing');
+      setState('verifying');
+      setStatusMessage('Verifying...');
       
       const video = videoRef.current;
       const canvas = canvasRef.current;
       
-      // Set canvas dimensions to match video
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       
-      // Draw video frame to canvas
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         throw new Error('Failed to get canvas context');
@@ -214,87 +269,66 @@ export const GenUIHumanVerification: React.FC<GenUIHumanVerificationProps> = ({
       
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-      // Stop camera stream
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
-      }
-      setIsStreamReady(false);
+      // Camera stream STAYS running
       
-      // Start verification
       await verifyImage(canvas);
     } catch (err) {
       const error = err as Error;
-      setError(`Failed to capture image: ${error.message}`);
-      setState('idle');
-      cleanup();
+      setStatusMessage(`Capture error: ${error.message}`);
+      setLastFailureReason(error.message);
+      
+      // Use updater function to get latest count
+      setAttemptCount(prevAttemptCount => {
+        if (prevAttemptCount >= MAX_ATTEMPTS) {
+          setState('failed-final');
+          closeDialogWithDelay();
+          onVerificationFailed?.();
+        } else {
+          setState('failed-attempt');
+        }
+        return prevAttemptCount + 1;
+      });
       onError?.(error);
     }
-  }, [onError, cleanup]);
+  }, [onError, onVerificationFailed, closeDialogWithDelay]); // Removed attemptCount, verifyImage
 
   const verifyImage = React.useCallback(async (imageCanvas: HTMLCanvasElement) => {
     try {
-      setState('verifying');
-      setError(null);
+      if (!isBrowser) throw new Error('LanguageModel API is only available in browser.');
 
-      // Check if we're in browser environment
-      if (!isBrowser) {
-        throw new Error('LanguageModel API is only available in browser environment.');
-      }
-
-      // Access global self (which is window in browser)
       const globalSelf = (typeof self !== 'undefined' ? self : window) as any;
-
-      // Check if LanguageModel is available
       if (typeof globalSelf.LanguageModel === 'undefined') {
-        throw new Error('Chrome LanguageModel API is not available. Please use Chrome 138+ with required hardware.');
+        throw new Error('Chrome LanguageModel API is not available.');
       }
 
-      // Check availability
       const availability = await globalSelf.LanguageModel.availability({
         expectedInputs: [{ type: 'image' }],
       });
-
       if (availability === 'unavailable') {
-        throw new Error('LanguageModel is not available on this device. Please check hardware requirements.');
+        throw new Error('LanguageModel is not available on this device.');
       }
 
-      // Create session with expectedInputs for image
       const session = await globalSelf.LanguageModel.create({
         expectedInputs: [{ type: 'image' }],
       });
-      
       sessionRef.current = session;
 
-      // Get the current instruction value from ref (always has the latest value)
       const currentInstruction = instructionRef.current;
-      
-      console.log('[AIHumanVerification] Using instruction for verification:', currentInstruction);
-      console.log('[AIHumanVerification] Current instruction from ref:', instructionRef.current);
-      console.log('[AIHumanVerification] propInstruction:', propInstruction);
-      console.log('[AIHumanVerification] generatedInstruction:', generatedInstruction);
-      console.log('[AIHumanVerification] computed instruction:', instruction);
-      
-      // Create the prompt with image using the current instruction
       const promptText = `Does this photo show a person following this instruction: "${currentInstruction}"? Analyze the image carefully and respond with a JSON object containing:
 - "verified" (true if the person is following the instruction correctly, false otherwise)
-- "confidence" (a number between 0 and 1 representing how confident you are in your answer)
-- "reason" (if verified is false, provide a brief reason why the verification failed, e.g., "person is not covering mouth", "wrong gesture detected", etc.)
+- "confidence" (a number between 0 and 1)
+- "reason" (if verified is false, provide a brief reason why)`;
 
-IMPORTANT: If there are any other humans visible in the image besides the main person being verified, the verification must fail. Set "verified" to false and provide a reason indicating the presence of additional people in the image.`;
-
-      // Response constraint JSON schema
       const responseSchema = {
         type: 'object',
         properties: {
           verified: { type: 'boolean' },
           confidence: { type: 'number', minimum: 0, maximum: 1 },
-          reason: { type: 'string' }, // Optional reason for verification result
+          reason: { type: 'string' },
         },
         required: ['verified', 'confidence'],
       };
 
-      // Prompt with image using content array format
       const response = await session.prompt(
         [
           {
@@ -305,132 +339,109 @@ IMPORTANT: If there are any other humans visible in the image besides the main p
             ],
           },
         ],
-        {
-          responseConstraint: responseSchema,
-        }
+        { responseConstraint: responseSchema }
       );
 
-      // Log the raw response for debugging
-      console.log('[AIHumanVerification] Human verification response:', response);
-      
-      // Parse JSON response
       let result: VerificationResult;
       try {
         const parsed = JSON.parse(response);
-        console.log('[AIHumanVerification] Parsed verification result:', parsed);
         result = {
           success: parsed.verified === true,
           confidence: parsed.confidence,
           reason: parsed.reason,
         };
-        
-        // Log reason if verification failed
-        if (!result.success && result.reason) {
-          console.log('[AIHumanVerification] Verification failed reason:', result.reason);
-        }
       } catch (parseError) {
-        // If parsing fails, try to extract from text response
-        console.warn('[AIHumanVerification] Failed to parse JSON, attempting text extraction');
-        const lowerResponse = response.toLowerCase();
-        const hasYes = lowerResponse.includes('yes') || lowerResponse.includes('true');
-        const hasConfidence = /confidence[\s:]*([\d.]+)/i.exec(response);
-        
-        // Try to extract reason from text
-        const reasonMatch = /reason[:\s]+([^.]+)/i.exec(response);
-        const extractedReason = reasonMatch ? reasonMatch[1].trim() : undefined;
-        
+        // **FIX:** Don't re-throw. Handle parse failure as a verification failure.
+        console.warn('[AIHumanVerification] Failed to parse JSON, treating as failure.');
         result = {
-          success: hasYes,
-          confidence: hasConfidence ? parseFloat(hasConfidence[1]) : 0.5,
-          reason: extractedReason,
+          success: false,
+          confidence: 0,
+          reason: 'Failed to parse verification response. Please try again.',
         };
-        console.log('[AIHumanVerification] Extracted result from text:', result);
-        
-        // Log reason if verification failed
-        if (!result.success && result.reason) {
-          console.log('[AIHumanVerification] Verification failed reason:', result.reason);
-        }
       }
-
-      setVerificationResult(result);
       
-      if (result.success) {
-        setState('verified');
-        onVerified?.(result.confidence || 0);
-      } else {
-        setState('failed');
-        onVerificationFailed?.();
-      }
-
       // Cleanup session
       try {
         const destroyResult = session.destroy();
         if (destroyResult && typeof destroyResult.catch === 'function') {
           destroyResult.catch(() => {});
         }
-      } catch (err) {
-        // Ignore destroy errors
-      }
+      } catch (err) { /* Ignore */ }
       sessionRef.current = null;
+      
+      // --- Handle Result ---
+      if (result.success) {
+        console.log(`[AIHumanVerification] Success, Confidence: ${result.confidence}`);
+        setState('success');
+        onVerified?.(result.confidence || 0);
+        closeDialogWithDelay();
+      } else {
+        const reason = result.reason || 'Verification failed. Please try again.';
+        setLastFailureReason(reason);
+        setStatusMessage(reason);
+        
+        // Use updater function to get latest count
+        setAttemptCount(prevAttemptCount => {
+          if (prevAttemptCount >= MAX_ATTEMPTS) {
+            setState('failed-final');
+            onVerificationFailed?.();
+            closeDialogWithDelay();
+          } else {
+            setState('failed-attempt');
+          }
+          return prevAttemptCount + 1;
+        });
+      }
+
     } catch (err) {
       const error = err as Error;
-      setError(`Verification failed: ${error.message}`);
-      setState('failed');
-      cleanup();
+      const reason = `Verification error: ${error.message}`;
+      setLastFailureReason(reason);
+      setStatusMessage(reason);
+      
+      // Use updater function to get latest count
+      setAttemptCount(prevAttemptCount => {
+        if (prevAttemptCount >= MAX_ATTEMPTS) {
+          setState('failed-final');
+          onVerificationFailed?.();
+          closeDialogWithDelay();
+        } else {
+          setState('failed-attempt');
+        }
+        return prevAttemptCount + 1;
+      });
       onError?.(error);
     }
-  }, [onVerified, onVerificationFailed, onError, cleanup]); // No need for instruction in deps since we use ref
+  }, [onVerified, onVerificationFailed, onError, closeDialogWithDelay]); // Removed attemptCount
 
-  // Generate instruction using Prompt API (LanguageModel)
+  // Generate instruction
   const generateInstruction = React.useCallback(async () => {
-    // If prop instruction is provided, skip generation
-    if (propInstruction) {
-      return;
-    }
+    if (propInstruction) return;
 
     try {
       setIsGeneratingInstruction(true);
-      setError(null);
+      if (!isBrowser) throw new Error('LanguageModel API only available in browser.');
       
-      // Check if we're in browser environment
-      if (!isBrowser) {
-        throw new Error('LanguageModel API is only available in browser environment.');
-      }
-
-      // Access global self (which is window in browser)
       const globalSelf = (typeof self !== 'undefined' ? self : window) as any;
-
-      // Check if LanguageModel is available
       if (typeof globalSelf.LanguageModel === 'undefined') {
-        throw new Error('Chrome LanguageModel API is not available. Please use Chrome 138+ with required hardware.');
+        throw new Error('Chrome LanguageModel API is not available.');
       }
-
-      // Check availability
+      
       const availability = await globalSelf.LanguageModel.availability();
       if (availability === 'unavailable') {
-        throw new Error('LanguageModel is not available on this device. Please check hardware requirements.');
+        throw new Error('LanguageModel is not available on this device.');
       }
 
-      console.log('[AIHumanVerification] Generating instruction with prompt:', instructionPrompt);
-      
-      // Create session for instruction generation
       const session = await globalSelf.LanguageModel.create();
-      
-      // Create prompt with constraint to keep it short
-      const fullPrompt = `${instructionPrompt}
-
-Respond with only the instruction text, no extra explanations or formatting. Maximum 15 words.`;
+      const fullPrompt = `${instructionPrompt}\n\nRespond with only the instruction text. Maximum 15 words.`;
       
       const generated = await session.prompt(fullPrompt);
       
-      console.log('[AIHumanVerification] Prompt API response:', generated);
-      
-      // Clean up the response - extract just the essential instruction
-      let cleaned = generated.trim();
-      
-      console.log('[AIHumanVerification] Raw generated instruction:', cleaned);
-      
+      // **FIX:** Replaced simple cleanup with robust logic
+      console.log('[AIHumanVerification] Raw generated instruction:', generated);
+          
       // Remove markdown formatting
+      let cleaned = generated.trim();
       cleaned = cleaned.replace(/\*\*/g, ''); // Remove bold
       cleaned = cleaned.replace(/^#+\s*/gm, ''); // Remove headings
       cleaned = cleaned.replace(/^\d+\.\s*/gm, ''); // Remove numbered lists
@@ -489,53 +500,50 @@ Respond with only the instruction text, no extra explanations or formatting. Max
       }
       
       console.log('[AIHumanVerification] Cleaned instruction:', cleaned);
+      // **END FIX**
+
+      setGeneratedInstruction(cleaned);
       
-      // Destroy session
       try {
         const destroyResult = session.destroy();
         if (destroyResult && typeof destroyResult.catch === 'function') {
           destroyResult.catch(() => {});
         }
-      } catch (err) {
-        // Ignore destroy errors
-      }
+      } catch (err) { /* Ignore */ }
       
-      setGeneratedInstruction(cleaned);
     } catch (err) {
       const error = err as Error;
       console.error('[AIHumanVerification] Failed to generate instruction:', error);
-      // Fallback to default instruction if generation fails
-      setGeneratedInstruction('take your selfie with your hand covering your mouth');
-      setError(`Failed to generate instruction: ${error.message}`);
+      setGeneratedInstruction('take your selfie with your hand covering your mouth.');
       onError?.(error);
     } finally {
       setIsGeneratingInstruction(false);
     }
   }, [propInstruction, instructionPrompt, onError]);
 
+  // Main button click handler
   const handleStart = React.useCallback(async () => {
-    setState('idle');
-    setError(null);
-    setVerificationResult(null);
-    setIsStreamReady(false);
+    setState('generating');
+    setLastFailureReason(null);
+    setStatusMessage(null);
     
-    // Generate instruction first if not provided
     if (!propInstruction) {
       await generateInstruction();
     }
     
-    startCamera();
-  }, [startCamera, propInstruction, generateInstruction]);
+    setAttemptCount(1); // Reset attempt count
+    setState('prompting');
+    setIsDialogOpen(true);
+  }, [propInstruction, generateInstruction]);
 
+  // Retry button click handler
   const handleRetry = React.useCallback(() => {
-    cleanup();
-    setState('idle');
-    setError(null);
-    setVerificationResult(null);
-    setIsStreamReady(false);
-  }, [cleanup]);
+    // Note: The logic in verifyImage/captureAndVerify already increments the count
+    // We just need to start the countdown for the *next* attempt.
+    startCountdown();
+  }, [startCountdown]);
 
-  // Create hidden canvas for image capture
+  // Create hidden canvas on mount
   React.useEffect(() => {
     if (!canvasRef.current) {
       const canvas = document.createElement('canvas');
@@ -543,58 +551,194 @@ Respond with only the instruction text, no extra explanations or formatting. Max
       canvasRef.current = canvas;
     }
   }, []);
+  
+  // **FIX:** Simplified `useCallback` dependencies
+  // By using `setAttemptCount(prev => ...)` inside the fail handlers,
+  // we no longer need to pass `attemptCount` as a dependency to
+  // `verifyImage` or `captureAndVerify`. This breaks the stale closure chain
+  // and makes the callbacks more stable.
+  React.useEffect(() => {
+    startCountdown.current = () => {
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+      }
+      
+      setState('countdown');
+      setCountdownValue(5);
+      setStatusMessage('Capturing in 5s...');
+  
+      countdownTimerRef.current = setInterval(() => {
+        setCountdownValue(prev => {
+          if (prev === null || prev <= 1) {
+            clearInterval(countdownTimerRef.current!);
+            countdownTimerRef.current = null;
+            setStatusMessage('Capturing...');
+            captureAndVerifyRef.current(); // Use ref
+            return null;
+          }
+          setStatusMessage(`Capturing in ${prev - 1}s...`);
+          return prev - 1;
+        });
+      }, 1000);
+    };
+  }, []); // Empty dep array
+
+  const captureAndVerifyRef = React.useRef(captureAndVerify);
+  const startCountdownRef = React.useRef(startCountdown);
+
+  React.useEffect(() => {
+    captureAndVerifyRef.current = captureAndVerify;
+    startCountdownRef.current = startCountdown;
+  });
+
+
+  // --- Render Status Bar ---
+  const renderStatus = () => {
+    switch (state) {
+      case 'starting-camera':
+        return <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {statusMessage}</>;
+      case 'countdown':
+        return <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {statusMessage}</>;
+      case 'verifying':
+        return <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {statusMessage}</>;
+      case 'failed-attempt':
+        return <><XCircle className="w-4 h-4 mr-2 text-destructive" /> {statusMessage}</>;
+      case 'prompting':
+        return <><Info className="w-4 h-4 mr-2 text-blue-500" /> Ready to start verification.</>;
+      default:
+        return null;
+    }
+  };
+
+  // --- Render Buttons ---
+  const renderButtons = () => {
+    switch (state) {
+      case 'prompting':
+        return (
+          <>
+            <Button onClick={() => setIsDialogOpen(false)} variant="outline">Cancel</Button>
+            <Button onClick={startCamera} size="lg">
+              <Camera className="w-4 h-4 mr-2" />
+              Start Camera
+            </Button>
+          </>
+        );
+      case 'starting-camera':
+        return (
+          <>
+            <Button onClick={() => setIsDialogOpen(false)} variant="outline">Cancel</Button>
+            <Button disabled size="lg">
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Starting...
+            </Button>
+          </>
+        );
+      case 'failed-attempt':
+        return (
+          <>
+            <Button onClick={() => setIsDialogOpen(false)} variant="outline">Cancel</Button>
+            {/* Displaying the "next" attempt number.
+              After attempt 1 fails, attemptCount is set to 2.
+              Button shows "Retry Attempt (2/3)". This is correct.
+            */}
+            <Button onClick={handleRetry} size="lg">
+              Retry
+            </Button>
+          </>
+        );
+      case 'countdown':
+      case 'verifying':
+        return (
+          <p className="text-sm text-muted-foreground text-center w-full">
+            Verification in progress...
+          </p>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className={className} style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
       {/* Hidden canvas for image capture */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      {state === 'idle' && (
+      {(state === 'idle' || state === 'generating') && (
         <div className="text-center space-y-4">
           <Button
             onClick={handleStart}
-            disabled={isGeneratingInstruction}
+            disabled={state === 'generating'}
             size="lg"
             className="min-w-[200px]"
           >
-            {isGeneratingInstruction ? (
+            {state === 'generating' ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generating instruction...
+                Please wait...
               </>
             ) : (
               buttonText
             )}
           </Button>
-          {error && (
-            <Alert variant="destructive" className="mt-4">
-              <XCircle className="w-4 h-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
         </div>
       )}
 
-      <Dialog open={state === 'camera-open'} onOpenChange={(open) => {
-        if (!open) {
-          cleanup();
-          setState('idle');
-        }
-      }}>
-        <DialogContent className="sm:max-w-[600px]" showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle>Take Your Selfie</DialogTitle>
-            <DialogDescription>
-              Follow the instruction below to verify you are human
-            </DialogDescription>
+      {state === 'success' && (
+        <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+          <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+          <AlertTitle className="text-green-800 dark:text-green-200 font-semibold text-lg">
+            Verification Successful!
+          </AlertTitle>
+          <AlertDescription className="text-green-700 dark:text-green-300 mt-2">
+            You have been successfully verified as human.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {state === 'failed-final' && (
+        <Alert variant="destructive">
+          <XCircle className="w-5 h-5" />
+          <AlertTitle className="font-semibold text-lg">Verification Failed</AlertTitle>
+          <AlertDescription className="mt-2">
+            <p>We could not verify you</p>
+            {lastFailureReason && (
+              <p className="text-sm mt-2">
+                <strong>Reason:</strong> {lastFailureReason}
+              </p>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
+        <DialogContent className="sm:max-w-[600px] p-0" showCloseButton={true}>
+          <DialogHeader className="p-6 pb-2">
+            <DialogTitle>Human Verification</DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4">
+          <div className="space-y-4 px-6">
+            {/* Status Bar */}
+            <div className="text-sm font-medium h-6 flex items-center text-muted-foreground">
+              {renderStatus()}
+            </div>
+          
+            {/* Instruction */}
+            <Alert variant="default" className="bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800">
+              <Info className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <AlertTitle className="font-semibold text-blue-800 dark:text-blue-200">
+                Follow this instruction:
+              </AlertTitle>
+              <AlertDescription className="text-blue-700 dark:text-blue-300">
+                {instruction}
+              </AlertDescription>
+            </Alert>
+          
+            {/* Camera Viewport */}
             <div 
               className="relative w-full bg-black rounded-lg overflow-hidden"
               style={{ 
-                minHeight: '400px',
+                minHeight: '320px',
+                aspectRatio: '16/9',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -606,8 +750,9 @@ Respond with only the instruction text, no extra explanations or formatting. Max
                 playsInline
                 muted
                 className="w-full h-full object-cover block"
+                style={{ display: isStreamReady ? 'block' : 'none' }}
               />
-              {!isStreamReady && (
+              {(!isStreamReady && state !== 'prompting') && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="flex flex-col items-center gap-3 text-white">
                     <Loader2 className="w-8 h-8 animate-spin" />
@@ -615,85 +760,15 @@ Respond with only the instruction text, no extra explanations or formatting. Max
                   </div>
                 </div>
               )}
-              <div
-                className="absolute bottom-4 left-4 right-4 bg-black/75 text-white p-3 rounded-lg text-sm text-center font-medium"
-              >
-                {instruction}
-              </div>
             </div>
-            
-            <div className="flex gap-3 justify-center">
-              <Button
-                onClick={captureImage}
-                disabled={!isStreamReady || !streamRef.current}
-                size="lg"
-                className="min-w-[140px]"
-              >
-                <Camera className="w-4 h-4 mr-2" />
-                Capture Selfie
-              </Button>
-              <Button
-                onClick={() => {
-                  cleanup();
-                  setState('idle');
-                }}
-                variant="outline"
-                size="lg"
-                className="min-w-[140px]"
-              >
-                Cancel
-              </Button>
-            </div>
+          </div>
+          
+          {/* Footer / Buttons */}
+          <div className="flex gap-3 justify-end p-6 bg-muted/50 rounded-b-lg">
+            {renderButtons()}
           </div>
         </DialogContent>
       </Dialog>
-
-      {state === 'verifying' && (
-        <div className="flex flex-col items-center justify-center py-12 gap-4">
-          <Loader2 className="w-12 h-12 animate-spin text-primary" />
-          <div className="text-lg font-semibold">Verifying...</div>
-          <div className="text-sm text-muted-foreground">Analyzing your selfie</div>
-        </div>
-      )}
-
-      {state === 'verified' && verificationResult && (
-        <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
-          <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
-          <AlertTitle className="text-green-800 dark:text-green-200 font-semibold text-lg">
-            Verification Successful!
-          </AlertTitle>
-          <AlertDescription className="text-green-700 dark:text-green-300 mt-2">
-            <div className="space-y-2">
-              <p>You have been successfully verified as human.</p>
-              {verificationResult.confidence !== undefined && (
-                <p className="text-sm font-medium">
-                  Confidence: {(verificationResult.confidence * 100).toFixed(1)}%
-                </p>
-              )}
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {state === 'failed' && (
-        <Alert variant="destructive">
-          <XCircle className="w-5 h-5" />
-          <AlertTitle className="font-semibold text-lg">Verification Failed</AlertTitle>
-          <AlertDescription className="mt-2">
-            <div className="space-y-4">
-              {error && (
-                <p className="text-sm">{error}</p>
-              )}
-              {!error && (
-                <p>Please make sure you follow the instruction correctly and try again.</p>
-              )}
-              <Button onClick={handleRetry} className="mt-2">
-                Try Again
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
     </div>
   );
 };
