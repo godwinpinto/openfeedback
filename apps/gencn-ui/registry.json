@@ -158,6 +158,26 @@
             "type": "registry:component"
           }
         ]
+      },
+      {
+        "name": "genui-i18n-text",
+        "type": "registry:component",
+        "title": "GenUI I18n Text",
+        "description": "GenUI-powered i18n text component with automatic text rewriting and tone customization.",
+        "dependencies": [
+          "react"
+        ],
+        "registryDependencies": [
+          "http://localhost:3000/r/genui-provider.json",
+          "tooltip",
+          "button"
+        ],
+        "files": [
+          {
+            "path": "registry/new-york/gencn-ui/i18n/I18nText.tsx",
+            "type": "registry:component"
+          }
+        ]
       }
     ]
   }
