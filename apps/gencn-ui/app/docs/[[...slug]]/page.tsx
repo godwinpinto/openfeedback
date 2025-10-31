@@ -10,6 +10,7 @@ import { getMDXComponents } from '@/mdx-components';
 import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { Separator } from '@/components/ui/separator';
+import { ChromeCheck } from '@/components/chrome-check';
 
 export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const params = await props.params;
@@ -20,10 +21,11 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
 
   return (
     <DocsPage toc={page.data.toc} full={page.data.full}>
+      <ChromeCheck />
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <Separator />
-      <DocsBody className="prose dark:prose-invert">
+      <DocsBody className="prose dark:prose">
         <MDX
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths

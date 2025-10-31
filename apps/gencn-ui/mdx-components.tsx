@@ -15,6 +15,11 @@ import * as Twoslash from 'fumadocs-twoslash/ui';
 import { Callout } from 'fumadocs-ui/components/callout';
 import * as StepsComponents from 'fumadocs-ui/components/steps';
 import { Mermaid } from '@/lib/mermaid';
+import { CodeFile } from '@/lib/code-file';
+import { createGenerator } from 'fumadocs-typescript';
+import { AutoTypeTable } from 'fumadocs-typescript/ui';
+
+const generator = createGenerator();
 
 export function getMDXComponents(components?: MDXComponents,page?: any): MDXComponents {
   return {
@@ -29,6 +34,10 @@ export function getMDXComponents(components?: MDXComponents,page?: any): MDXComp
     Accordions,
     ...Twoslash,
     Mermaid,
+    CodeFile,
+    AutoTypeTable: (props) => (
+      <AutoTypeTable {...props} generator={generator} />
+    ),
     ...components,
   };
 }
