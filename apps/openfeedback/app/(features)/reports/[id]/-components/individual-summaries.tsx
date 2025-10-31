@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import type { SubmissionData } from './types'
 import type { QuestionWithId } from '@/lib/openfeedback/feedback-form'
 import { getAnswers } from './utils'
-import { GenUISummarizerContent, GenUISummarizerProvider, GenUISummarizerText } from '@/components/genui-summarize-block'
+import { GenUISummarizerContent, GenUISummarizerProvider, GenUISummarizerText, useGenUISummarizer } from '@/components/genui-summarize-block'
 
 interface IndividualSummariesProps {
   feedbackResponseData: SubmissionData[]
@@ -46,28 +46,145 @@ function formatQuestionType(type: string): string {
   return type.replace('_', ' ').replace('short text', 'text').replace('long text', 'text')
 }
 
+interface CachedSummaryDisplayProps {
+  cachedResult: string
+  title?: string
+}
+
+// Display component for cached summaries (mimics GenUISummarizerContent UI)
+function CachedSummaryDisplay({ cachedResult, title = 'Individual Summary' }: CachedSummaryDisplayProps) {
+  return (
+    <div className="mb-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-bold">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="whitespace-pre-wrap">{cachedResult}</div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+interface CacheAwareSummarizerProps {
+  contentKey: string
+  markdownContent: string
+  cache: Map<string, string>
+  onResult: (key: string, result: string) => void
+}
+
+// Component that wraps GenUISummarizerProvider and caches results
+function CacheAwareSummarizer({ contentKey, markdownContent, cache, onResult }: CacheAwareSummarizerProps) {
+  const [cachedSummary, setCachedSummary] = useState<string | null>(cache.get(contentKey) || null)
+
+  // Check for cached result on mount and when cache updates
+  useEffect(() => {
+    const cached = cache.get(contentKey)
+    if (cached) {
+      setCachedSummary(cached)
+    }
+  }, [contentKey, cache])
+
+  // If we have a cached result, don't render the provider to avoid API calls
+  if (cachedSummary) {
+    return (
+      <>
+        <CachedSummaryDisplay cachedResult={cachedSummary} />
+        <pre className="text-sm whitespace-pre-wrap font-mono bg-muted p-4 rounded-md overflow-x-auto">
+          {markdownContent}
+        </pre>
+      </>
+    )
+  }
+
+  // No cache, render provider normally and cache result when it arrives
+  return (
+    <>
+      <GenUISummarizerProvider 
+        displayMode="static" 
+        type="tldr" 
+        length="medium" 
+        format="plain-text"
+        key={contentKey}
+      >
+        <ResultCacheInterceptor 
+          contentKey={contentKey}
+          cache={cache}
+          onResult={(key, result) => {
+            cache.set(key, result)
+            onResult(key, result)
+            setCachedSummary(result)
+          }}
+        />
+        <GenUISummarizerContent title="Individual Summary" className="mb-6" />
+        <pre className="text-sm whitespace-pre-wrap font-mono bg-muted p-4 rounded-md overflow-x-auto">
+          <GenUISummarizerText text={markdownContent} as="div" />
+        </pre>
+      </GenUISummarizerProvider>
+    </>
+  )
+}
+
+interface ResultCacheInterceptorProps {
+  contentKey: string
+  cache: Map<string, string>
+  onResult: (key: string, result: string) => void
+}
+
+// Component that intercepts results from GenUISummarizerProvider and caches them
+function ResultCacheInterceptor({ contentKey, cache, onResult }: ResultCacheInterceptorProps) {
+  // Use the exported hook to access the provider's result directly
+  // This is safe because we're inside a GenUISummarizerProvider
+  const { result } = useGenUISummarizer()
+  const hasCachedRef = useRef(false)
+
+  // Store result in cache when it becomes available
+  useEffect(() => {
+    if (result && result.trim().length > 0 && !hasCachedRef.current) {
+      // Only cache if we don't already have this result cached
+      const existingCache = cache.get(contentKey)
+      if (!existingCache || existingCache !== result) {
+        cache.set(contentKey, result)
+        onResult(contentKey, result)
+        hasCachedRef.current = true
+      }
+    }
+  }, [result, contentKey, cache, onResult])
+
+  return null
+}
+
 function RespondentCard({
   respondentIndex,
   submission,
   questions,
+  contentKey,
+  cache,
+  onResult,
 }: {
   respondentIndex: number
   submission: SubmissionData
   questions: QuestionWithId[]
+  contentKey: string
+  cache: Map<string, string>
+  onResult: (key: string, result: string) => void
 }) {
   const answers = getAnswers(submission.responseData)
   
   // Build markdown content
-  const markdownContent = questions
-    .map((question) => {
-      const questionTitle = (question as any).questionTitle || 'Untitled Question'
-      const answer = answers[question.id]
-      const formattedAnswer = formatResponseValue(answer, question)
-      const questionType = formatQuestionType(question.type)
-      
-      return `# ${questionTitle} [${questionType}]\n${formattedAnswer}`
-    })
-    .join('\n\n')
+  const markdownContent = useMemo(() => {
+    return questions
+      .map((question) => {
+        const questionTitle = (question as any).questionTitle || 'Untitled Question'
+        const answer = answers[question.id]
+        const formattedAnswer = formatResponseValue(answer, question)
+        const questionType = formatQuestionType(question.type)
+        
+        return `# ${questionTitle} [${questionType}]\n${formattedAnswer}`
+      })
+      .join('\n\n')
+  }, [questions, answers])
 
   return (
     <Card className="shadow-none">
@@ -75,12 +192,12 @@ function RespondentCard({
         <CardTitle>Respondent {respondentIndex + 1}</CardTitle>
       </CardHeader>
       <CardContent>
-      <GenUISummarizerProvider displayMode="static" type="tldr" length="medium" format="plain-text">
-        <GenUISummarizerContent title="Individual Summary" className="mb-6" />
-        <pre className="text-sm whitespace-pre-wrap font-mono bg-muted p-4 rounded-md overflow-x-auto">
-          <GenUISummarizerText text={markdownContent} as="div" />
-        </pre>
-        </GenUISummarizerProvider>
+        <CacheAwareSummarizer 
+          contentKey={contentKey}
+          markdownContent={markdownContent}
+          cache={cache}
+          onResult={onResult}
+        />
       </CardContent>
     </Card>
   )
@@ -92,6 +209,7 @@ export function IndividualSummaries({
 }: IndividualSummariesProps) {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
+  const summaryCache = useRef<Map<string, string>>(new Map())
 
   const totalPages = Math.ceil(feedbackResponseData.length / pageSize)
   const startIndex = (currentPage - 1) * pageSize
@@ -100,6 +218,12 @@ export function IndividualSummaries({
     () => feedbackResponseData.slice(startIndex, endIndex),
     [feedbackResponseData, startIndex, endIndex]
   )
+
+  // Use submissionId as the cache key (unique per submission)
+
+  const handleCacheResult = (key: string, result: string) => {
+    summaryCache.current.set(key, result)
+  }
 
   const handlePageSizeChange = (value: string) => {
     setPageSize(Number(value))
@@ -182,10 +306,13 @@ export function IndividualSummaries({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {paginatedData.map((submission, index) => (
           <RespondentCard
-            key={index}
+            key={submission.submissionId}
             respondentIndex={startIndex + index}
             submission={submission}
             questions={questions}
+            contentKey={submission.submissionId}
+            cache={summaryCache.current}
+            onResult={handleCacheResult}
           />
         ))}
       </div>

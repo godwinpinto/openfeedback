@@ -69,6 +69,7 @@ export default async function ReportPage({ params }: ReportPageProps) {
   // Parse JSON data
   const questionnaireFormData = JSON.parse(form.questionnaireFormData)
   const feedbackResponseData = allSubmissions.map((submission) => ({
+    submissionId: submission.submissionId,
     responseData: JSON.parse(submission.feedbackResponseData),
     createdAt: new Date(submission.createdAt).toLocaleString(),
     createdIp: submission.createdIp,

@@ -1,6 +1,7 @@
 import type { QuestionWithId } from '@/lib/openfeedback/feedback-form'
 
 export interface SubmissionData {
+  submissionId: string
   responseData: unknown
   createdAt: string
   createdIp?: string | null
