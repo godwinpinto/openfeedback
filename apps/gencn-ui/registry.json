@@ -101,6 +101,31 @@
             "type": "registry:component"
           }
         ]
+      },
+      {
+        "name": "genui-status",
+        "type": "registry:component",
+        "title": "GenUI Status",
+        "description": "GenUI-powered status component with automatic text rewriting and tone customization.",
+        "dependencies": [
+          "react"
+        ],
+        "registryDependencies": [
+          "http://localhost:3000/r/genui-provider.json",
+          "card",
+          "badge",
+          "progress",
+          "spinner",
+          "alert",
+          "popover",
+          "button"
+        ],
+        "files": [
+          {
+            "path": "registry/new-york/gencn-ui/llm-status/genui-status.tsx",
+            "type": "registry:component"
+          }
+        ]
       }
     ]
   }
