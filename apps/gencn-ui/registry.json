@@ -126,7 +126,7 @@
         ],
         "files": [
           {
-            "path": "registry/new-york/gencn-ui/llm-status/genui-status.tsx",
+            "path": "registry/new-york/gencn-ui/items/llm-status/genui-status.tsx",
             "type": "registry:component"
           }
         ]
@@ -198,6 +198,27 @@
         "files": [
           {
             "path": "registry/new-york/gencn-ui/items/summarize-block/genui-summarize-block.tsx",
+            "type": "registry:component"
+          }
+        ]
+      },
+      {
+        "name": "genui-human-verification",
+        "type": "registry:component",
+        "title": "GenUI Human Verification",
+        "description": "GenUI-powered human verification component with automatic text rewriting and tone customization.",
+        "dependencies": [
+          "react"
+        ],
+        "registryDependencies": [
+          "http://localhost:3000/r/genui-provider.json",
+          "dialog",
+          "alert",
+          "button"
+        ],
+        "files": [
+          {
+            "path": "registry/new-york/gencn-ui/items/human-verification/genui-human-verification.tsx",
             "type": "registry:component"
           }
         ]
