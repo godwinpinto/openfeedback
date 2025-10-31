@@ -7,18 +7,15 @@
       "---Introduction---",
       "index",
       "---Components---",
-      "genui-summarize-block",
+      "genui-provider",
+      "genui-sonner",
+      "genui-input",
       "genui-status",
-
+      "genui-textarea",
+      "genui-i18n-text",
+      "genui-summarize-block",
+      "genui-human-verification",
       "---Hooks---",
-      "use-genui-summarizer",
-      "use-genui-status",
-      "use-genui-i18n-text",
-      "use-genui-human-verification",
-      "use-genui-proofreader",
-      "use-genui-translator",
-      "use-genui-writer",
-      "use-genui-rewriter",
-      "use-genui-language-detector"
+      "use-genui-summarizer"
     ]
   }
