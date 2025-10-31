@@ -36,6 +36,8 @@ import { FEEDBACK_FORM_STORAGE_KEY, type FeedbackQuestion, type QuestionWithId, 
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button as DialogButton } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
+import { GenUIInput } from '@/components/genui-input';
+import { GenUITextarea } from '@/components/genui-textarea';
 
 type QuestionType =
   | 'short_text'
@@ -255,18 +257,66 @@ export default function CreateBuilder() {
         <CardHeader>
           <div className="flex items-start gap-3">
             <div className="flex-1 space-y-2">
-              <Input
+              <GenUIInput
                 value={(question as any).questionTitle}
                 onChange={(e) => handleUpdateQuestion(question.id, { questionTitle: e.target.value })}
                 placeholder="Question title"
                 className="font-semibold"
+
+                features={["compose", "improve", "fix-grammar", "translate", "auto-suggest"]}
+            translateTargets={["en", "fr", "es", "de", "hi", "ja", "zh-CN"]}
+            translateLanguageMap={{
+              en: 'English',
+              fr: 'French',
+              es: 'Spanish',
+              de: 'German',
+              hi: 'Hindi',
+              ja: 'Japanese',
+              'zh-CN': 'Chinese (Simplified)'
+            }}
+            placeholderPrompt="Describe what you want"
+            writerOptions={{
+              tone: 'neutral',
+              format: 'plain-text',
+              length: 'short',
+              sharedContext: `Question type: ${question.type}. This is the title/heading for a feedback form question. Requirements: Keep it concise (under 20 words), use clear and professional language, make it a single sentence, and ensure it clearly communicates what information you're asking the respondent to provide. The question should be specific and actionable.`,
+              expectedInputLanguages: ['en'],
+              expectedContextLanguages: ['en'],
+              outputLanguage: 'en',
+            }}
+            onAccept={(text) => handleUpdateQuestion(question.id, { questionTitle: text })}
+            onAIError={(e) => console.error('AI input error:', e)}
               />
-              <Textarea
+              <GenUITextarea
                 value={(question as any).questionHint || ''}
                 onChange={(e) => handleUpdateQuestion(question.id, { questionHint: e.target.value || undefined })}
                 placeholder="Hint (optional)"
                 rows={1}
                 className="text-sm resize-none"
+
+                features={["compose", "improve", "fix-grammar", "translate", "inline-suggest"]}
+                translateTargets={["en", "fr", "es", "de", "hi", "ja", "zh-CN"]}
+                translateLanguageMap={{
+                  en: 'English',
+                  fr: 'French',
+                  es: 'Spanish',
+                  de: 'German',
+                  hi: 'Hindi',
+                  ja: 'Japanese',
+                  'zh-CN': 'Chinese (Simplified)'
+                }}
+                placeholderPrompt="Describe what you want"
+                writerOptions={{
+                  tone: 'neutral',
+                  format: 'plain-text',
+                  length: 'short',
+                  sharedContext: `Question type: ${question.type}. This is a hint/helper text for a feedback form question that provides additional context or guidance to respondents. Requirements: Keep it concise (under 20 words), use clear and friendly language, make it a single sentence, and ensure it helps clarify what kind of answer is expected or provides helpful context without duplicating the question title.`,
+                  expectedInputLanguages: ['en'],
+                  expectedContextLanguages: ['en'],
+                  outputLanguage: 'en',
+                }}
+                onAccept={(e) => handleUpdateQuestion(question.id, { questionHint: e })}
+                onAIError={(e) => console.error('AI error:', e)}
               />
             </div>
           </div>
