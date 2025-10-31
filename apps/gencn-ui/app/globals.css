@@ -1,7 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/shadcn.css';
 @import 'fumadocs-ui/css/preset.css';
+@import 'fumadocs-twoslash/twoslash.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -43,6 +44,22 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --color-fd-background: hsl(0, 0%, 96%);
+  --color-fd-foreground: hsl(0, 0%, 3.9%);
+  --color-fd-muted: hsl(0, 0%, 96.1%);
+  --color-fd-muted-foreground: hsl(0, 0%, 45.1%);
+  --color-fd-popover: hsl(0, 0%, 98%);
+  --color-fd-popover-foreground: hsl(0, 0%, 15.1%);
+  --color-fd-card: hsl(0, 0%, 94.7%);
+  --color-fd-card-foreground: hsl(0, 0%, 3.9%);
+  --color-fd-border: hsla(0, 0%, 80%, 50%);
+  --color-fd-primary: hsl(0, 0%, 9%);
+  --color-fd-primary-foreground: hsl(0, 0%, 98%);
+  --color-fd-secondary: hsl(0, 0%, 93.1%);
+  --color-fd-secondary-foreground: hsl(0, 0%, 9%);
+  --color-fd-accent: hsla(0, 0%, 82%, 50%);
+  --color-fd-accent-foreground: hsl(0, 0%, 9%);
+  --color-fd-ring: hsl(0, 0%, 63.9%);
 }
 
 :root {
@@ -112,6 +129,22 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --color-fd-background: hsl(0, 0%, 7.04%);
+  --color-fd-foreground: hsl(0, 0%, 92%);
+  --color-fd-muted: hsl(0, 0%, 12.9%);
+  --color-fd-muted-foreground: hsla(0, 0%, 70%, 0.8);
+  --color-fd-popover: hsl(0, 0%, 11.6%);
+  --color-fd-popover-foreground: hsl(0, 0%, 86.9%);
+  --color-fd-card: hsl(0, 0%, 9.8%);
+  --color-fd-card-foreground: hsl(0, 0%, 98%);
+  --color-fd-border: hsla(0, 0%, 40%, 20%);
+  --color-fd-primary: hsl(0, 0%, 98%);
+  --color-fd-primary-foreground: hsl(0, 0%, 9%);
+  --color-fd-secondary: hsl(0, 0%, 12.9%);
+  --color-fd-secondary-foreground: hsl(0, 0%, 92%);
+  --color-fd-accent: hsla(0, 0%, 40.9%, 30%);
+  --color-fd-accent-foreground: hsl(0, 0%, 90%);
+  --color-fd-ring: hsl(0, 0%, 54.9%);
 }
 
 @layer base {
@@ -120,5 +153,160 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+
+
+@utility prose {
+
+  .prose h1 {
+    @apply text-4xl font-bold tracking-tight text-foreground mb-6 mt-8;
+  }
+
+  .prose p{
+    @apply text-muted-foreground mb-4;
+  }
+
+  .prose td>div>code{
+    @apply ml-2 font-normal;
+  }
+
+  .prose td>code{
+    @apply ml-2 font-normal;
+  }
+
+  .prose h2 {
+    @apply text-3xl font-semibold tracking-tight text-foreground mb-4 mt-8;
+  }
+
+  .prose h3 {
+    @apply text-2xl font-semibold tracking-tight text-foreground mb-3 mt-6;
+  }
+
+  .prose h4 {
+    @apply text-xl font-medium tracking-tight text-foreground mb-2 mt-4;
+  }
+
+  .prose h5 {
+    @apply text-lg font-medium tracking-tight text-foreground mb-2 mt-4;
+  }
+
+  .prose h6 {
+    @apply text-base font-medium tracking-tight text-foreground mb-2 mt-4;
+  }
+
+  a {
+    @apply text-primary decoration-primary/30 underline-offset-2 transition-colors hover:text-primary/80 hover:decoration-primary/60 no-underline;
+  }
+
+  /* Dark mode prose styles */
+  .dark & h1 {
+    @apply text-foreground;
+  }
+
+  .dark & .prose h2 {
+    @apply text-foreground;
+  }
+
+  .dark & .prose h3 {
+    @apply text-foreground;
+  }
+
+  .dark & .prose h4 {
+    @apply text-foreground;
+  }
+
+  .dark & .prose h5 {
+    @apply text-foreground;
+  }
+
+  .dark & .prose h6 {
+    @apply text-foreground;
+  }
+
+  .dark & a {
+    @apply text-primary decoration-primary/30 hover:text-primary/80 hover:decoration-primary/60;
+  }
+
+  /* Additional prose elements for better dark mode support */
+  p {
+    @apply text-muted-foreground mb-4;
+  }
+
+  .dark & p {
+    @apply text-foreground;
+  }
+
+  ul, ol {
+    @apply text-foreground mb-4;
+  }
+
+  .dark & ul, .dark & ol {
+    @apply text-foreground;
+  }
+
+  li {
+    @apply text-foreground mb-1;
+  }
+
+  .dark & li {
+    @apply text-foreground;
+  }
+
+  blockquote {
+    @apply border-l-4 border-primary/20 pl-4 italic text-foreground/80 mb-4;
+  }
+
+  .dark & blockquote {
+    @apply border-primary/30 text-foreground/80;
+  }
+
+  code {
+    @apply bg-muted text-foreground px-1 py-0.5 rounded text-sm;
+  }
+
+  .dark & code {
+    @apply bg-muted text-foreground;
+  }
+
+  .prose pre {
+    @apply bg-muted text-foreground p-4 rounded-lg overflow-x-auto mb-4;
+  }
+
+  .dark & pre {
+    @apply bg-muted text-foreground;
+  }
+
+  pre code {
+    @apply bg-transparent;
+  }
+
+  .dark & pre code {
+    @apply bg-transparent;
+  }
+
+  hr {
+    @apply border-border my-8;
+  }
+
+  .dark & hr {
+    @apply border-border;
+  }
+
+  strong {
+    @apply font-semibold text-foreground;
+  }
+
+  .dark & strong {
+    @apply text-foreground;
+  }
+
+  em {
+    @apply italic text-foreground;
+  }
+
+  .dark & em {
+    @apply text-foreground;
   }
 }

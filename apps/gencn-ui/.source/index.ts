@@ -2,4 +2,4 @@
 import * as docs_0 from "../content/docs/index.mdx?collection=docs"
 import { _runtime } from "fumadocs-mdx/runtime/next"
 import * as _source from "../source.config"
-export const docs = _runtime.docs<typeof _source.docs>([{ info: {"path":"index.mdx","fullPath":"content/docs/index.mdx"}, data: docs_0 }], [])
+export const docs = _runtime.docs<typeof _source.docs>([{ info: {"path":"index.mdx","fullPath":"content/docs/index.mdx"}, data: docs_0 }], [{"info":{"path":"meta.json","fullPath":"content/docs/meta.json"},"data":{"title":"GenCN UI","pages":["---Introduction---","index","---Components---","genui-summarize-block","genui-status","---Hooks---","use-genui-summarizer","use-genui-status","use-genui-i18n-text","use-genui-human-verification","use-genui-proofreader","use-genui-translator","use-genui-writer","use-genui-rewriter","use-genui-language-detector"],"description":"The Generative AI based Shadcn UI Component Library","root":true,"icon":"Building"}}])
