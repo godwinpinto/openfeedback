@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { GenUII18nText } from "@/components/genui-i18n-text";
 import { GenUITextarea } from "@/components/genui-textarea";
 import { AISONNER_TONES, aiToast, Toaster } from "@/lib/genui-sonner";
-import { AISummarizerProvider, AISummarizerText, GenUISummarizerContent } from "@/components/genui-summarize-block";
+import { GenUISummarizerProvider, GenUISummarizerText, GenUISummarizerContent } from "@/components/genui-summarize-block";
 import { GenUIHumanVerification } from "@/components/genui-human-verification";
 import { GenUIInput } from "@/components/genui-input";
 
@@ -130,7 +130,7 @@ export default function Home() {
               <CardHeader>
                 <CardTitle className="text-base">AISummarizer Demo</CardTitle>
               </CardHeader>
-              <AISummarizerProvider displayMode="static" type="tldr" length="medium" format="plain-text">
+              <GenUISummarizerProvider displayMode="static" type="tldr" length="medium" format="plain-text">
                 <CardContent className="space-y-4">
                   <div className="space-y-2 text-sm text-muted-foreground">
                     <p>This demo collects multiple text snippets below and summarizes them together.</p>
@@ -142,28 +142,28 @@ export default function Home() {
                   <div className="space-y-2">
                     <div className="flex items-start gap-2">
                       <span className="min-w-20 text-xs text-muted-foreground">Snippet 1</span>
-                      <AISummarizerText
+                      <GenUISummarizerText
                         as="p"
                         text="At dawns of a new day, the lighthouse stood quiet above the harbor, its lantern cold after a night of roaring wind. Jonas, the keeper, stepped out to survey the damage: shingles scattered like cards, gulls wheeling over restless water, and a fishing skiff nudged crooked against the pier. He had weathered worse storms, but this one felt personal—like the sea had tried to write its name across the village and almost succeeded."
                       />
                     </div>
                     <div className="flex items-start gap-2">
                       <span className="min-w-20 text-xs text-muted-foreground">Snippet 2</span>
-                      <AISummarizerText
+                      <GenUISummarizerText
                         as="p"
                         text="By noon, neighbors emerged with hammers and rope, trading quiet jokes as they worked. Children gathered fallen branches into neat, proud piles. The baker handed out warm rolls, the kind with sugar that stuck to your fingers, and Jonas shared a thermos of coffee that tasted faintly of smoke. They repaired what they could and tied bright cloth to broken posts so boats would see the hazards at dusk."
                       />
                     </div>
                     <div className="flex items-start gap-2">
                       <span className="min-w-20 text-xs text-muted-foreground">Snippet 3</span>
-                      <AISummarizerText
+                      <GenUISummarizerText
                         as="p"
                         text="When the supply boat finally rounded the point, its horn low and steady, a cheer rose along the seawall. The lantern would burn again that night, Jonas promised, and the sea—though still swollen and sullen—seemed to accept the truce. In the hush that followed, he climbed the spiral stairs, each step echoing with the small, ordinary courage that keeps a town alive."
                       />
                     </div>
                   </div>
                 </CardContent>
-              </AISummarizerProvider>
+              </GenUISummarizerProvider>
             </Card>
           </div>
 

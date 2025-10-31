@@ -11,17 +11,17 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export type AISummarizerDisplayMode = 'ondemand' | 'static';
+export type GenUISummarizerDisplayMode = 'ondemand' | 'static';
 
-export interface AISummarizerProviderProps extends UseSummarizerOptions {
-  displayMode?: AISummarizerDisplayMode;
+export interface GenUISummarizerProviderProps extends UseSummarizerOptions {
+  displayMode?: GenUISummarizerDisplayMode;
   children: React.ReactNode;
   joinSeparator?: string;
   summarizeOptions?: SummarizeOptions;
 }
 
 interface AISummarizerContextValue {
-  displayMode: AISummarizerDisplayMode;
+  displayMode: GenUISummarizerDisplayMode;
   register: (id: string, text: string) => void;
   update: (id: string, text: string) => void;
   unregister: (id: string) => void;
@@ -39,19 +39,19 @@ interface AISummarizerContextValue {
 
 const AISummarizerContext = React.createContext<AISummarizerContextValue | null>(null);
 
-export function useAISummarizer() {
+export function useGenUISummarizer() {
   const ctx = React.useContext(AISummarizerContext);
-  if (!ctx) throw new Error('AISummarizer components must be used within <AISummarizerProvider>');
+  if (!ctx) throw new Error('AISummarizer components must be used within <GenUISummarizerProvider>');
   return ctx;
 }
 
-export function AISummarizerProvider({
+export function GenUISummarizerProvider({
   children,
   displayMode = 'ondemand',
   joinSeparator = '\n\n',
   summarizeOptions,
   ...summarizerOptions
-}: AISummarizerProviderProps) {
+}: GenUISummarizerProviderProps) {
   const registryRef = React.useRef<Map<string, string>>(new Map());
   const [version, setVersion] = React.useState(0);
   const [contentVisible, setContentVisible] = React.useState<boolean>(() => (displayMode === 'static'));
@@ -169,14 +169,14 @@ export function AISummarizerProvider({
 }
 
 
-export interface AISummarizerTextProps {
+export interface GenUISummarizerTextProps {
     text: string;
     as?: React.ElementType;
     className?: string;
   }
   
-  export function AISummarizerText({ text, as: Component = 'span', className }: AISummarizerTextProps) {
-    const { register, update, unregister } = useAISummarizer();
+  export function GenUISummarizerText({ text, as: Component = 'span', className }: GenUISummarizerTextProps) {
+    const { register, update, unregister } = useGenUISummarizer();
     const idRef = React.useRef<string>('');
   
     if (!idRef.current) {
@@ -213,7 +213,7 @@ export interface AISummarizerTextProps {
     emptyText = 'Summary will appear here',
     title = 'Summary',
   }: GenUISummarizerContentProps) {
-    const { displayMode, summarize, show, isLoading, error, progress, result, hasContent, contentVisible, setContentVisible } = useAISummarizer();
+    const { displayMode, summarize, show, isLoading, error, progress, result, hasContent, contentVisible, setContentVisible } = useGenUISummarizer();
   
     const handleToggleOndemand = async () => {
       if (!contentVisible) {
