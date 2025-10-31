@@ -14,6 +14,7 @@ import type { SubmissionData } from './types'
 import type { QuestionWithId } from '@/lib/openfeedback/feedback-form'
 import { getAnswers } from './utils'
 import { GenUISummarizerContent, GenUISummarizerProvider, GenUISummarizerText, useGenUISummarizer } from '@/components/genui-summarize-block'
+import { GenUII18nText } from '@/components/genui-i18n-text'
 
 interface IndividualSummariesProps {
   feedbackResponseData: SubmissionData[]
@@ -89,15 +90,30 @@ function CachedSummaryDisplay({ cachedResult, title = 'Individual Summary' }: Ca
   )
 }
 
+// Wrapper for GenUII18nText that handles markdown display properly
+function I18nMarkdownText({ text, language, contentKey }: { text: string; language: string; contentKey: string }) {
+  // If language is "original", just display the text without translation
+  if (language === 'original') {
+    return <div className="whitespace-pre-wrap">{text}</div>
+  }
+  
+  return (
+    <div className="whitespace-pre-wrap">
+      <GenUII18nText key={`${contentKey}-${language}`} text={text} language={language} showOption="inline-auto" />
+    </div>
+  )
+}
+
 interface CacheAwareSummarizerProps {
   contentKey: string
   markdownContent: string
   cache: Map<string, string>
   onResult: (key: string, result: string) => void
+  language: string
 }
 
 // Component that wraps GenUISummarizerProvider and caches results
-function CacheAwareSummarizer({ contentKey, markdownContent, cache, onResult }: CacheAwareSummarizerProps) {
+function CacheAwareSummarizer({ contentKey, markdownContent, cache, onResult, language }: CacheAwareSummarizerProps) {
   const [cachedSummary, setCachedSummary] = useState<string | null>(cache.get(contentKey) || null)
 
   // Check for cached result on mount and when cache updates
@@ -114,7 +130,7 @@ function CacheAwareSummarizer({ contentKey, markdownContent, cache, onResult }: 
       <>
         <CachedSummaryDisplay cachedResult={cachedSummary} />
         <pre className="text-sm whitespace-pre-wrap font-mono bg-muted p-4 rounded-md overflow-x-auto">
-          {markdownContent}
+          <I18nMarkdownText key={contentKey} text={markdownContent} language={language} contentKey={contentKey} />
         </pre>
       </>
     )
@@ -140,10 +156,11 @@ function CacheAwareSummarizer({ contentKey, markdownContent, cache, onResult }: 
           }}
         />
         <GenUISummarizerContent title="Individual Summary" className="mb-6" />
-        <pre className="text-sm whitespace-pre-wrap font-mono bg-muted p-4 rounded-md overflow-x-auto">
-          <GenUISummarizerText text={markdownContent} as="div" />
-        </pre>
+        <GenUISummarizerText text={markdownContent} as="div" className="hidden" />
       </GenUISummarizerProvider>
+      <pre className="text-sm whitespace-pre-wrap font-mono bg-muted p-4 rounded-md overflow-x-auto">
+        <I18nMarkdownText key={contentKey} text={markdownContent} language={language} contentKey={contentKey} />
+      </pre>
     </>
   )
 }
@@ -184,6 +201,7 @@ function RespondentCard({
   contentKey,
   cache,
   onResult,
+  language,
 }: {
   respondentIndex: number
   submission: SubmissionData
@@ -191,6 +209,7 @@ function RespondentCard({
   contentKey: string
   cache: Map<string, string>
   onResult: (key: string, result: string) => void
+  language: string
 }) {
   const answers = getAnswers(submission.responseData)
   
@@ -219,6 +238,7 @@ function RespondentCard({
           markdownContent={markdownContent}
           cache={cache}
           onResult={onResult}
+          language={language}
         />
       </CardContent>
     </Card>
@@ -231,6 +251,7 @@ export function IndividualSummaries({
 }: IndividualSummariesProps) {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('original')
   const summaryCache = useRef<Map<string, string>>(new Map())
 
   const totalPages = Math.ceil(feedbackResponseData.length / pageSize)
@@ -309,6 +330,24 @@ export function IndividualSummaries({
             {feedbackResponseData.length} respondent
             {feedbackResponseData.length !== 1 ? 's' : ''}
           </div>
+          <label className="text-sm text-muted-foreground">
+            Language:{' '}
+            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+              <SelectTrigger className="w-32 inline-flex">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="original">Original</SelectItem>
+                <SelectItem value="hi">Hindi</SelectItem>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="fr">French</SelectItem>
+                <SelectItem value="es">Spanish</SelectItem>
+                <SelectItem value="de">German</SelectItem>
+                <SelectItem value="ja">Japanese</SelectItem>
+                <SelectItem value="zh-CN">Chinese (Simplified)</SelectItem>
+              </SelectContent>
+            </Select>
+          </label>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -350,6 +389,7 @@ export function IndividualSummaries({
             contentKey={submission.submissionId}
             cache={summaryCache.current}
             onResult={handleCacheResult}
+            language={selectedLanguage}
           />
         ))}
       </div>
