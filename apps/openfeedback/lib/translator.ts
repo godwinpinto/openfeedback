@@ -79,6 +79,9 @@ export async function translateOnce(
 	}
 
 	const translator = await ensureTranslator(options);
+	if (!translator) {
+		throw new Error('Failed to create translator. The language combination may not be supported.');
+	}
 	const result = await translator.translate(text, { signal: options.signal });
 	return result as string;
 }
@@ -94,6 +97,9 @@ export async function* translateStreaming(
 	}
 
 	const translator = await ensureTranslator(options);
+	if (!translator) {
+		throw new Error('Failed to create translator. The language combination may not be supported.');
+	}
 	if (typeof translator.translateStreaming !== 'function') {
 		// Fallback to non-streaming
 		yield await translator.translate(text, { signal: options.signal });
