@@ -5,10 +5,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { GenUII18nText } from "@/components/genui-i18n-text";
 import { GenUITextarea } from "@/components/genui-textarea";
-import { AIInput } from "@/components/genui-input";
 import { AISONNER_TONES, aiToast, Toaster } from "@/lib/genui-sonner";
 import { AISummarizerProvider, AISummarizerText, GenUISummarizerContent } from "@/components/genui-summarize-block";
 import { GenUIHumanVerification } from "@/components/genui-human-verification";
+import { GenUIInput } from "@/components/genui-input";
 
 export default function Home() {
   const [tone, setTone] = React.useState<string>("friendly");
@@ -85,8 +85,8 @@ export default function Home() {
             onAccept={(text) => console.log('Accepted AI text:', text)}
             onAIError={(e) => console.error('AI error:', e)}
           />
-          {/* AIInput (single-line) demo */}
-          <AIInput
+          {/* GenUIInput (single-line) demo */}
+          <GenUIInput
             className="w-full"
             placeholder="Type here..."
             features={["compose", "improve", "fix-grammar", "translate", "auto-suggest"]}

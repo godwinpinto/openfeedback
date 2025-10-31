@@ -1,5 +1,5 @@
 "use client";
-
+// This component is a wrapper around the Shadcn UI Input component that adds AI capabilities.
 import * as React from "react";
 import { Sparkles, Wand2, Languages, Repeat2, SpellCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -59,7 +59,7 @@ import { detectLanguages } from "@/lib/language-detector";
 
 export type ButtonVisibility = "ALWAYS" | "ON_FOCUS";
 
-export interface AIInputProps extends React.ComponentProps<"input"> {
+export interface GenUIInputProps extends React.ComponentProps<"input"> {
   buttonVisibility?: ButtonVisibility;
   buttonContent?: React.ReactNode;
   containerClassName?: string;
@@ -87,7 +87,7 @@ export interface AIInputProps extends React.ComponentProps<"input"> {
   onAIError?: (error: Error) => void;
 }
 
-export const AIInput = React.forwardRef<HTMLInputElement, AIInputProps>(
+export const GenUIInput = React.forwardRef<HTMLInputElement, GenUIInputProps>(
   (
     {
       buttonVisibility = "ALWAYS",
@@ -1371,7 +1371,7 @@ export const AIInput = React.forwardRef<HTMLInputElement, AIInputProps>(
   }
 );
 
-AIInput.displayName = "AIInput";
+GenUIInput.displayName = "GenUIInput";
 
 // Local state for Improve controls
 function useImproveControls() {
