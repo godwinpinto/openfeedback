@@ -4,14 +4,116 @@
     "homepage": "https://gencn.encatch.com",
     "items": [
       {
-        "name": "hello-world",
-        "type": "registry:block",
-        "title": "Hello World",
-        "description": "A simple Gencn UI component.",
+        "name": "rewriter",
+        "type": "registry:lib",
+        "title": "Rewriter",
+        "description": "Chrome Rewriter API wrapper for text rewriting with streaming support.",
+        "dependencies": [
+          "react"
+        ],
         "files": [
           {
-            "path": "registry/new-york/gencn-ui/gencn-ui/hello-world.tsx",
+            "path": "registry/new-york/gencn-ui/items/shared/block/lib/gui-types.ts",
+            "type": "registry:lib"
+          },
+          {
+            "path": "registry/new-york/gencn-ui/items/shared/lib/rewriter.ts",
+            "type": "registry:lib"
+          }
+        ]
+      },
+      {
+        "name": "summarizer",
+        "type": "registry:lib",
+        "title": "Summarizer",
+        "description": "Chrome Summarizer API wrapper for text summarization with streaming support.",
+        "dependencies": [
+          "react"
+        ],
+        "files": [
+          {
+            "path": "registry/new-york/gencn-ui/items/shared/block/lib/gui-types.ts",
+            "type": "registry:lib"
+          },
+          {
+            "path": "registry/new-york/gencn-ui/items/shared/block/lib/summarizer.ts",
+            "type": "registry:lib"
+          }
+        ]
+      },
+      {
+        "name": "use-summarizer",
+        "type": "registry:lib",
+        "title": "useSummarizer Hook",
+        "description": "React hook for using the Chrome Summarizer API with loading states and error handling.",
+        "dependencies": [
+          "react"
+        ],
+        "registryDependencies": [
+          "summarizer"
+        ],
+        "files": [
+          {
+            "path": "registry/new-york/gencn-ui/items/shared/hooks/useSummarizer.ts",
+            "type": "registry:lib"
+          }
+        ]
+      },
+      {
+        "name": "summarize-selection",
+        "type": "registry:component",
+        "title": "Summarize Selection",
+        "description": "Component for summarizing selected text with a floating action button.",
+        "dependencies": [
+          "react",
+          "lucide-react"
+        ],
+        "registryDependencies": [
+          "use-summarizer"
+        ],
+        "files": [
+          {
+            "path": "registry/new-york/gencn-ui/items/shared/block/components/SummarizeSelection.tsx",
             "type": "registry:component"
+          }
+        ]
+      },
+      {
+        "name": "gui-provider",
+        "type": "registry:component",
+        "title": "GUI Provider",
+        "description": "Provider component for Chrome AI APIs (Summarizer, Writer, Rewriter, Language Detector).",
+        "dependencies": [
+          "react"
+        ],
+        "registryDependencies": [
+          "summarize-selection"
+        ],
+        "files": [
+          {
+            "path": "registry/new-york/gencn-ui/items/shared/block/components/GUIProvider.tsx",
+            "type": "registry:component"
+          }
+        ]
+      },
+      {
+        "name": "sonner",
+        "type": "registry:lib",
+        "title": "AI Sonner",
+        "description": "AI-powered toast notifications using Sonner with automatic text rewriting and tone customization.",
+        "dependencies": [
+          "sonner",
+          "react"
+        ],
+        "registryDependencies": [
+          "rewriter",
+          "gui-provider",
+          "summarize-selection"
+        ],
+        "files": [
+          {
+            "path": "registry/new-york/gencn-ui/items/toast/lib/sonner.ts",
+            "type": "registry:lib"
           }
         ]
       }
