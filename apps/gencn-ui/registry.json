@@ -32,6 +32,26 @@
           {
             "path": "registry/new-york/gencn-ui/items/shared/genui-summarize-selection.tsx",
             "type": "registry:component"
+          },
+          {
+            "path": "registry/new-york/gencn-ui/items/shared/lib/language-detector.ts",
+            "type": "registry:lib"
+          },
+          {
+            "path": "registry/new-york/gencn-ui/items/shared/lib/proofreader.ts",
+            "type": "registry:lib"
+          },
+          {
+            "path": "registry/new-york/gencn-ui/items/shared/lib/translator.ts",
+            "type": "registry:lib"
+          },
+          {
+            "path": "registry/new-york/gencn-ui/items/shared/lib/writer.ts",
+            "type": "registry:lib"
+          },
+          {
+            "path": "registry/new-york/gencn-ui/items/shared/lib/rewriter.ts",
+            "type": "registry:lib"
           }
         ]
       },
@@ -51,6 +71,34 @@
           {
             "path": "registry/new-york/gencn-ui/items/sonner/lib/genui-sonner.ts",
             "type": "registry:lib"
+          }
+        ]
+      },
+      {
+        "name": "genui-input",
+        "type": "registry:component",
+        "title": "GenUI Input",
+        "description": "GenUI-powered input component with automatic text rewriting and tone customization.",
+        "dependencies": [
+          "react"
+        ],
+        "registryDependencies": [
+          "http://localhost:3000/r/genui-provider.json",
+          "input",
+          "textarea",
+          "button",
+          "spinner",
+          "dropdown-menu",
+          "dialog",
+          "alert",
+          "select",
+          "command",
+          "popover"
+        ],
+        "files": [
+          {
+            "path": "registry/new-york/gencn-ui/items/input/genui-input.tsx",
+            "type": "registry:component"
           }
         ]
       }

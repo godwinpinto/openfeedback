@@ -11,44 +11,13 @@ import {
   RewriterOptions,
   WriteOptions,
   RewriteOptions,
+  LanguageDetectorOptions,
+  DetectedLanguage,
+  AvailabilityStatus,
+  LanguageModelAvailabilityStatus,
+  PromptOptions,
 } from "@/registry/new-york/gencn-ui/items/shared/genui-types";
 
-// Type definitions for Chrome Language Detector API
-export interface LanguageDetectorOptions {
-  monitor?: (monitor: any) => void;
-}
-
-export interface DetectedLanguage {
-  detectedLanguage: string;
-  confidence: number;
-}
-
-export type AvailabilityStatus =
-  | "available"
-  | "downloadable"
-  | "unavailable"
-  | null;
-
-// LanguageModel Prompt API types
-export interface PromptOptions {
-  temperature?: number;
-  topK?: number;
-  responseConstraint?: any; // JSON Schema for structured output
-  omitResponseConstraintInput?: boolean;
-  signal?: AbortSignal;
-}
-
-export interface LanguageModelAvailabilityStatus {
-  // State
-  isLanguageModelSupported: boolean | null;
-  languageModelAvailability: AvailabilityStatus;
-  languageModelError: string | null;
-
-  // Functions
-  checkLanguageModelAvailability: (
-    options?: PromptOptions
-  ) => Promise<AvailabilityStatus>;
-}
 
 export interface GenUIContextValue extends LanguageModelAvailabilityStatus {
   // State
