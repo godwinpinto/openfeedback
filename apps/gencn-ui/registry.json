@@ -1,0 +1,19 @@
+{
+    "$schema": "https://ui.shadcn.com/schema/registry.json",
+    "name": "gencn-ui",
+    "homepage": "https://gencn.encatch.com",
+    "items": [
+      {
+        "name": "hello-world",
+        "type": "registry:block",
+        "title": "Hello World",
+        "description": "A simple Gencn UI component.",
+        "files": [
+          {
+            "path": "registry/new-york/gencn-ui/gencn-ui/hello-world.tsx",
+            "type": "registry:component"
+          }
+        ]
+      }
+    ]
+  }
