@@ -27,7 +27,7 @@ import {
 import React, { useState } from "react";
 import { Submenu, SubmenuItem } from "@/components/openfeedback/website/submenu";
 import { useTheme } from "next-themes";
-import { VoiceableStatus } from "voiceable";
+import { GenUIStatus } from "@/components/genui-status";
 
 // Mobile Submenu Component
 const MobileSubmenu = ({
@@ -197,7 +197,7 @@ export const HeroHeader = () => {
             </div>
 
             <div className="hidden lg:flex items-center gap-3">
-              <VoiceableStatus 
+              <GenUIStatus 
                 variant="popover"
                 showErrors={false}
                 showProgress={true}
