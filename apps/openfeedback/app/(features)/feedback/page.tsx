@@ -3,9 +3,9 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field";
+import { GenUIInput } from "@/components/genui-input";
+import { GenUITextarea } from "@/components/genui-textarea";
 import { Separator } from "@/components/ui/separator";
 import { FEEDBACK_FORM_STORAGE_KEY, FEEDBACK_RESPONSE_STORAGE_KEY, parseStoredForm, parseStoredResponse, serializeResponse, type QuestionWithId, isSeparatorQuestion } from "@/lib/openfeedback/feedback-form";
 import { MultipleChoiceFieldResponse } from "@/components/openfeedback/form/multiple-choice-field";
@@ -130,6 +130,42 @@ export default function FeedbackPage() {
     } catch {}
   };
 
+  const buildSharedContext = (currentQuestionId: string): string => {
+    const previousAnswers: string[] = [];
+    
+    questions.forEach((question) => {
+      if (isSeparatorQuestion(question) || question.id === currentQuestionId) {
+        return;
+      }
+      
+      const answer = answers[question.id];
+      if (answer === undefined || answer === null || answer === '') {
+        return;
+      }
+      
+      const questionTitle = (question as any).questionTitle || 'Untitled question';
+      let answerText = '';
+      
+      if (typeof answer === 'string') {
+        answerText = answer;
+      } else if (Array.isArray(answer)) {
+        answerText = answer.join(', ');
+      } else if (typeof answer === 'number') {
+        answerText = answer.toString();
+      }
+      
+      if (answerText.trim()) {
+        previousAnswers.push(`Q: "${questionTitle}"\nA: "${answerText}"`);
+      }
+    });
+    
+    if (previousAnswers.length === 0) {
+      return '';
+    }
+    
+    return `Context from previous responses in this feedback form:\n\n${previousAnswers.join('\n\n')}\n\nUse this context to provide a consistent and coherent response that aligns with the user's previous answers.`;
+  };
+
   const renderQuestion = (q: QuestionWithId) => {
     if (isSeparatorQuestion(q)) return null;
 
@@ -144,15 +180,40 @@ export default function FeedbackPage() {
         )}
       </>
     );
+    
+    const sharedContext = buildSharedContext(q.id);
 
     if (q.type === "short_text") {
       return (
         <Field key={q.id} orientation="vertical" className="space-y-2">
           {commonHeader}
-          <Input
+          <GenUIInput
             value={(answers[q.id] as string) || ""}
             onChange={(e) => setAnswer(q.id, e.target.value)}
             placeholder={(q as any).placeholder || "Your answer"}
+            features={["compose", "improve", "fix-grammar", "translate"]}
+            translateTargets={["en", "fr", "es", "de", "hi", "ja", "zh-CN"]}
+            translateLanguageMap={{
+              en: 'English',
+              fr: 'French',
+              es: 'Spanish',
+              de: 'German',
+              hi: 'Hindi',
+              ja: 'Japanese',
+              'zh-CN': 'Chinese (Simplified)'
+            }}
+            placeholderPrompt="Describe what you want"
+            writerOptions={{
+              tone: 'neutral',
+              format: 'plain-text',
+              length: 'short',
+              sharedContext: sharedContext || undefined,
+              expectedInputLanguages: ['en'],
+              expectedContextLanguages: ['en'],
+              outputLanguage: 'en',
+            }}
+            onAccept={(text) => setAnswer(q.id, text)}
+            onAIError={(e) => console.error('AI input error:', e)}
           />
           {errors[q.id] && <FieldError>{errors[q.id]}</FieldError>}
         </Field>
@@ -163,11 +224,34 @@ export default function FeedbackPage() {
       return (
         <Field key={q.id} orientation="vertical" className="space-y-2">
           {commonHeader}
-          <Textarea
+          <GenUITextarea
             rows={(q as any).rows || 4}
             value={(answers[q.id] as string) || ""}
             onChange={(e) => setAnswer(q.id, e.target.value)}
             placeholder={(q as any).placeholder || "Type your response"}
+            features={["compose", "improve", "fix-grammar", "translate", "inline-suggest"]}
+            translateTargets={["en", "fr", "es", "de", "hi", "ja", "zh-CN"]}
+            translateLanguageMap={{
+              en: 'English',
+              fr: 'French',
+              es: 'Spanish',
+              de: 'German',
+              hi: 'Hindi',
+              ja: 'Japanese',
+              'zh-CN': 'Chinese (Simplified)'
+            }}
+            placeholderPrompt="Describe what you want"
+            writerOptions={{
+              tone: 'neutral',
+              format: 'plain-text',
+              length: 'medium',
+              sharedContext: sharedContext || undefined,
+              expectedInputLanguages: ['en'],
+              expectedContextLanguages: ['en'],
+              outputLanguage: 'en',
+            }}
+            onAccept={(text) => setAnswer(q.id, text)}
+            onAIError={(e) => console.error('AI error:', e)}
           />
           {errors[q.id] && <FieldError>{errors[q.id]}</FieldError>}
         </Field>
