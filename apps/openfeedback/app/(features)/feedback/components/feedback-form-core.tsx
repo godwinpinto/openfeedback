@@ -56,8 +56,8 @@ export function FeedbackFormCore({
   const [submitted, setSubmitted] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = React.useState(false);
-  const [headerTitle] = React.useState<string>(formData.formTitle || "Feedback");
-  const [headerDescription] = React.useState<string>(formData.formDescription || "Please answer the questions below.");
+  const headerTitle = formData.formTitle || "Untitled Feedback Form";
+  const headerDescription = formData.formDescription || "Please answer the questions below.";
   const [currentPage, setCurrentPage] = React.useState<number>(initialPage);
   const [hasLoadedInitialData, setHasLoadedInitialData] = React.useState<boolean>(false);
   const [showVerificationDialog, setShowVerificationDialog] = React.useState<boolean>(false);

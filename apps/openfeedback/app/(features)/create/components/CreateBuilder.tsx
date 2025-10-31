@@ -51,6 +51,8 @@ import { Rocket } from 'lucide-react';
 import { ThemeColorPicker } from '@/components/ui/theme-color-picker';
 import { saveFeedbackLink, getAllFeedbackLinks, deleteFeedbackLink, clearAllFeedbackLinks, type SavedFeedbackLink } from '@/lib/openfeedback/feedback-links-db';
 import { FeedbackFormCore } from '@/app/(features)/feedback/components/feedback-form-core';
+import { GenUIHumanVerification } from '@/components/genui-human-verification';
+import { hasCreatedFormRecently, recordFormCreation, clearFormCreationTracking } from '@/lib/openfeedback/form-creation-tracking';
 
 type QuestionType =
   | 'short_text'
@@ -98,8 +100,8 @@ export default function CreateBuilder() {
   const [selectedType, setSelectedType] = React.useState<QuestionType | null>(null);
   const [questions, setQuestions] = React.useState<QuestionWithId[]>([]);
   const [isUnsaved, setIsUnsaved] = React.useState(false);
-  const [formTitle, setFormTitle] = React.useState<string>('');
-  const [formDescription, setFormDescription] = React.useState<string>('');
+  const [formTitle, setFormTitle] = React.useState<string>('Untitled Feedback Form');
+  const [formDescription, setFormDescription] = React.useState<string>('Please answer the questions below.');
   const [lightPrimary, setLightPrimary] = React.useState<string>('#000000');
   const [darkPrimary, setDarkPrimary] = React.useState<string>('#ffffff');
   const [isFormDialogOpen, setIsFormDialogOpen] = React.useState(false);
@@ -108,12 +110,28 @@ export default function CreateBuilder() {
   const [launchedFormId, setLaunchedFormId] = React.useState<string | null>(null);
   const [launchedReportId, setLaunchedReportId] = React.useState<string | null>(null);
   const [copiedFeedbackLink, setCopiedFeedbackLink] = React.useState(false);
+  const [needsVerification, setNeedsVerification] = React.useState<boolean>(false);
+  const [isVerified, setIsVerified] = React.useState<boolean>(false);
+  const [showVerificationDialog, setShowVerificationDialog] = React.useState<boolean>(false);
+  const [pendingQuestionType, setPendingQuestionType] = React.useState<QuestionType | null>(null);
   const [copiedReportLink, setCopiedReportLink] = React.useState(false);
   const [savedLinks, setSavedLinks] = React.useState<SavedFeedbackLink[]>([]);
   const [savedLinksPopoverOpen, setSavedLinksPopoverOpen] = React.useState(false);
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = React.useState(false);
 
   const handleSelectType = (type: QuestionType) => {
+    // Check if verification is needed before adding question
+    if (hasCreatedFormRecently(5) && !isVerified) {
+      setOpen(false); // Close popover first
+      setPendingQuestionType(type); // Store the type to add after verification (don't set selectedType to keep button rotated)
+      // Add delay to allow popover to close before opening verification dialog
+      setTimeout(() => {
+        setNeedsVerification(true);
+        setShowVerificationDialog(true);
+      }, 150);
+      return;
+    }
+    
     const newQuestion: QuestionWithId = {
       ...createDefaultQuestion(type),
       id: `question-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -121,6 +139,27 @@ export default function CreateBuilder() {
     setQuestions((prev) => [...prev, newQuestion]);
     setSelectedType(null);
     setOpen(false);
+  };
+
+  const handleVerificationSuccess = async () => {
+    clearFormCreationTracking();
+    setIsVerified(true);
+    setNeedsVerification(false);
+    setShowVerificationDialog(false);
+    
+    // If there's a pending question type, add it now
+    if (pendingQuestionType) {
+      const newQuestion: QuestionWithId = {
+        ...createDefaultQuestion(pendingQuestionType),
+        id: `question-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      } as QuestionWithId;
+      setQuestions((prev) => [...prev, newQuestion]);
+      setPendingQuestionType(null);
+    }
+    
+    await genUIToast.success('Verification successful! You can now add questions.', {
+      tone: 'funny',
+    });
   };
 
   const handleDeleteQuestion = (id: string) => {
@@ -167,8 +206,8 @@ export default function CreateBuilder() {
     try {
       const payload = serializeForm({
         savedAt: new Date().toISOString(),
-        formTitle: formTitle || undefined,
-        formDescription: formDescription || undefined,
+        formTitle: formTitle || 'Untitled Feedback Form',
+        formDescription: formDescription || 'Please answer the questions below.',
         theme: {
           lightPrimary: lightPrimary,
           darkPrimary: darkPrimary,
@@ -194,8 +233,8 @@ export default function CreateBuilder() {
     try {
       const payload = serializeForm({
         savedAt: new Date().toISOString(),
-        formTitle: formTitle || undefined,
-        formDescription: formDescription || undefined,
+        formTitle: formTitle || 'Untitled Feedback Form',
+        formDescription: formDescription || 'Please answer the questions below.',
         theme: {
           lightPrimary: lightPrimary,
           darkPrimary: darkPrimary,
@@ -212,6 +251,9 @@ export default function CreateBuilder() {
       const result = await launchFeedbackForm(payload);
       
       if (result.success) {
+        // Record form creation timestamp
+        recordFormCreation();
+        
         // Clear localStorage
         localStorage.removeItem(FEEDBACK_FORM_STORAGE_KEY);
         setIsUnsaved(false);
@@ -319,12 +361,13 @@ export default function CreateBuilder() {
     loadSavedLinks();
   }, []);
 
+
   // On mount, hydrate metadata if present
   React.useEffect(() => {
     const raw = localStorage.getItem(FEEDBACK_FORM_STORAGE_KEY);
     const parsed = parseStoredForm(raw);
-    if (parsed.formTitle) setFormTitle(parsed.formTitle);
-    if (parsed.formDescription) setFormDescription(parsed.formDescription);
+    setFormTitle(parsed.formTitle || 'Untitled Feedback Form');
+    setFormDescription(parsed.formDescription || 'Please answer the questions below.');
     if (parsed.theme?.lightPrimary) setLightPrimary(parsed.theme.lightPrimary);
     if (parsed.theme?.darkPrimary) setDarkPrimary(parsed.theme.darkPrimary);
     // hydrate questions if available
@@ -522,7 +565,7 @@ export default function CreateBuilder() {
   };
 
   return (
-    <>
+    <React.Fragment>
       <div className="relative min-h-screen pt-16 pb-32">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           <div className="mb-8 space-y-4">
@@ -753,7 +796,6 @@ export default function CreateBuilder() {
                 </CardContent>
               </Card>
             )}
-          </div>
 
           <div className="space-y-4">
             {questions.length === 0 ? (
@@ -769,7 +811,7 @@ export default function CreateBuilder() {
               questions.map((question, index) => renderQuestionEditor(question, index))
             )}
           </div>
-        </div>
+          </div>
 
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
@@ -999,7 +1041,34 @@ export default function CreateBuilder() {
              /> */}
           </div>
         </div>
+        </div>
       </div>
+
+      {/* Verification Dialog */}
+      <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Verification Required</DialogTitle>
+            <DialogDescription>
+              You've created a form recently. Please verify you are human to add questions.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <GenUIHumanVerification
+              onVerified={handleVerificationSuccess}
+              onVerificationFailed={async () => {
+                setNeedsVerification(true);
+                await genUIToast.error('Verification failed. Please try again.');
+              }}
+              onError={async (error) => {
+                console.error('Verification error:', error);
+                setNeedsVerification(true);
+                await genUIToast.error('An error occurred during verification.');
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Preview Dialog */}
       <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
@@ -1025,7 +1094,7 @@ export default function CreateBuilder() {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </React.Fragment>
   );
 }
 
