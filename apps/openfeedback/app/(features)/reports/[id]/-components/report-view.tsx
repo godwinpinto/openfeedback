@@ -6,6 +6,9 @@ import { isSeparatorQuestion } from '@/lib/openfeedback/feedback-form'
 import type { ReportViewProps } from './types'
 import { ReportInfo } from './report-info'
 import { QuestionsGrid } from './questions-grid'
+import { FeedbackCountChart } from './feedback-count-chart'
+import { IndividualSummaries } from './individual-summaries'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { isQuestionnaireData, getAnswers, analyzeQuestionResponses, getFormMetadata } from './utils'
 
 export function ReportView({
@@ -46,11 +49,30 @@ export function ReportView({
           submissionCount={submissionCount}
         />
 
-        <QuestionsGrid
-          questions={questions}
-          allAnswers={allAnswers}
-          analyzeQuestionResponses={analyzeQuestionResponses}
-        />
+        <Tabs defaultValue="overall" className="mt-6">
+          <TabsList>
+            <TabsTrigger value="overall">Overall Summary</TabsTrigger>
+            <TabsTrigger value="individual">Individual Summaries</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overall" className="mt-6">
+            <div className="space-y-6">
+              <FeedbackCountChart feedbackResponseData={feedbackResponseData} />
+              <QuestionsGrid
+                questions={questions}
+                allAnswers={allAnswers}
+                analyzeQuestionResponses={analyzeQuestionResponses}
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="individual" className="mt-6">
+            <IndividualSummaries
+              feedbackResponseData={feedbackResponseData}
+              questions={questions}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )

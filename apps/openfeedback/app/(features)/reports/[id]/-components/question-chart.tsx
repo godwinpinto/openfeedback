@@ -61,24 +61,27 @@ export function QuestionChart({ question, analysis }: QuestionChartProps) {
     // Use pie chart for small datasets, bar chart for larger ones
     if (analysis.data.length <= 5) {
       return (
-        <ChartContainer config={chartConfig} className="h-48">
-          <PieChart>
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Pie
-              data={dataWithColors}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={80}
-              label={({ name, value }) => `${name}: ${value}`}
-            >
-              {dataWithColors.map((item, index) => (
-                <Cell key={`cell-${index}`} fill={item.fill || CHART_COLORS[index % CHART_COLORS.length]} />
-              ))}
-            </Pie>
-          </PieChart>
-        </ChartContainer>
+        <div className="flex items-center justify-center">
+          <ChartContainer config={chartConfig} className="h-64 overflow-visible w-full max-w-md">
+            <PieChart>
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Pie
+                data={dataWithColors}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={70}
+                label={({ name, value }) => `${name}: ${value}`}
+                labelLine={false}
+              >
+                {dataWithColors.map((item, index) => (
+                  <Cell key={`cell-${index}`} fill={item.fill || CHART_COLORS[index % CHART_COLORS.length]} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ChartContainer>
+        </div>
       )
     }
 
@@ -103,14 +106,16 @@ export function QuestionChart({ question, analysis }: QuestionChartProps) {
     }
 
     return (
-      <ChartContainer config={chartConfig} className="h-48">
-        <BarChart data={dataWithColors}>
-          <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-          <YAxis />
-          <ChartTooltip content={<ChartTooltipContent />} />
-          <Bar dataKey="value" shape={renderBar} />
-        </BarChart>
-      </ChartContainer>
+      <div className="flex items-center justify-center">
+        <ChartContainer config={chartConfig} className="h-48 w-full">
+          <BarChart data={dataWithColors}>
+            <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+            <YAxis />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="value" shape={renderBar} />
+          </BarChart>
+        </ChartContainer>
+      </div>
     )
   }
 
@@ -158,18 +163,20 @@ export function QuestionChart({ question, analysis }: QuestionChartProps) {
     return (
       <div className="space-y-2">
         {analysis.average && (
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-muted-foreground text-center">
             Average: {analysis.average.toFixed(1)} / {(question as any).maxRating || 5}
           </div>
         )}
-        <ChartContainer config={chartConfig} className="h-48">
-          <BarChart data={dataWithColors}>
-            <XAxis dataKey="name" />
-            <YAxis />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="value" shape={renderBar} />
-          </BarChart>
-        </ChartContainer>
+        <div className="flex items-center justify-center">
+          <ChartContainer config={chartConfig} className="h-48 w-full">
+            <BarChart data={dataWithColors}>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="value" shape={renderBar} />
+            </BarChart>
+          </ChartContainer>
+        </div>
       </div>
     )
   }
