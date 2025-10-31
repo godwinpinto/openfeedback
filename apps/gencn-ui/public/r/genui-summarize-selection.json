@@ -9,7 +9,7 @@
     "lucide-react"
   ],
   "registryDependencies": [
-    "http://localhost:3000/r/genui-use-summarizer.json"
+    "http://localhost:3000/r/use-genui-summarizer.json"
   ],
   "files": [
     {

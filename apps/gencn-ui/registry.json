@@ -4,76 +4,34 @@
     "homepage": "https://gencn.encatch.com",
     "items": [
       {
-        "name": "genui-summarizer",
-        "type": "registry:lib",
-        "title": "Summarizer",
-        "description": "Chrome Summarizer API wrapper for text summarization with streaming support.",
-        "dependencies": [
-          "react"
+        "name": "genui-provider",
+        "type": "registry:block",
+        "title": "GUI Provider",
+        "description": "Provider component for Chrome AI APIs (Summarizer, Writer, Rewriter, Language Detector).",
+        "dependencies": [],
+        "registryDependencies": [
+          "button",
+          "alert",
+          "dialog",
+          "tooltip",
+          "skeleton"
         ],
         "files": [
+          {
+            "path": "registry/new-york/gencn-ui/items/shared/genui-provider.tsx",
+            "type": "registry:component"
+          },
           {
             "path": "registry/new-york/gencn-ui/items/shared/genui-types.ts",
             "type": "registry:lib"
           },
           {
-            "path": "registry/new-york/gencn-ui/items/shared/genui-summarizer.ts",
-            "type": "registry:lib"
-          }
-        ]
-      },
-      {
-        "name": "use-genui-summarizer",
-        "type": "registry:lib",
-        "title": "useSummarizer Hook",
-        "description": "React hook for using the Chrome Summarizer API with loading states and error handling.",
-        "dependencies": [
-          "react"
-        ],
-        "registryDependencies": [
-          "http://localhost:3000/r/genui-summarizer.json"
-        ],
-        "files": [
-          {
             "path": "registry/new-york/gencn-ui/items/shared/use-genui-summarizer.ts",
-            "type": "registry:lib"
-          }
-        ]
-      },
-      {
-        "name": "genui-summarize-selection",
-        "type": "registry:component",
-        "title": "Summarize Selection",
-        "description": "Component for summarizing selected text with a floating action button.",
-        "dependencies": [
-          "react",
-          "lucide-react"
-        ],
-        "registryDependencies": [
-          "http://localhost:3000/r/genui-use-summarizer.json"
-        ],
-        "files": [
+            "type": "registry:hook"
+          },
           {
             "path": "registry/new-york/gencn-ui/items/shared/genui-summarize-selection.tsx",
             "type": "registry:component"
-          }
-        ]
-      },
-      {
-        "name": "genui-provider",
-        "type": "registry:component",
-        "title": "GUI Provider",
-        "description": "Provider component for Chrome AI APIs (Summarizer, Writer, Rewriter, Language Detector).",
-        "dependencies": [
-          "react"
-        ],
-        "registryDependencies": [
-          "http://localhost:3000/r/genui-summarize-selection.json"
-        ],
-        "files": [
-          {
-            "path": "registry/new-york/gencn-ui/items/shared/genui-provider.tsx",
-            "type": "registry:block"
           }
         ]
       },
@@ -83,17 +41,16 @@
         "title": "AI Sonner",
         "description": "AI-powered toast notifications using Sonner with automatic text rewriting and tone customization.",
         "dependencies": [
-          "sonner",
-          "react"
+          "sonner"
         ],
         "registryDependencies": [
-          "http://localhost:3000/r/genui-provider.json",
-          "http://localhost:3000/r/genui-summarize-selection.json"
+          "sonner",
+          "http://localhost:3000/r/genui-provider.json"
         ],
         "files": [
           {
-            "path": "registry/new-york/gencn-ui/items/toast/lib/genui-sonner.ts",
-            "type": "registry:block"
+            "path": "registry/new-york/gencn-ui/items/sonner/lib/genui-sonner.ts",
+            "type": "registry:lib"
           }
         ]
       }
