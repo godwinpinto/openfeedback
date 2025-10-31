@@ -23,6 +23,10 @@ export type StoredFeedbackForm = {
   savedAt?: string;
   formTitle?: string;
   formDescription?: string;
+  theme?: {
+    lightPrimary?: string;
+    darkPrimary?: string;
+  };
   questions: QuestionWithId[];
 };
 
@@ -94,11 +98,18 @@ export const parseStoredForm = (raw: string | null): StoredFeedbackForm => {
           return hasValidType(candidate);
         })
       : [];
+    const theme = isRecord(parsed.theme)
+      ? {
+          lightPrimary: typeof parsed.theme.lightPrimary === "string" ? parsed.theme.lightPrimary : undefined,
+          darkPrimary: typeof parsed.theme.darkPrimary === "string" ? parsed.theme.darkPrimary : undefined,
+        }
+      : undefined;
     return {
       savedAt: typeof parsed.savedAt === "string" ? parsed.savedAt : undefined,
       formTitle: typeof parsed.formTitle === "string" ? parsed.formTitle : undefined,
       formDescription:
         typeof parsed.formDescription === "string" ? parsed.formDescription : undefined,
+      theme,
       questions,
     };
   } catch {
@@ -123,6 +134,7 @@ export const serializeForm = (form: StoredFeedbackForm) => {
       savedAt: new Date().toISOString(),
       formTitle: form.formTitle,
       formDescription: form.formDescription,
+      theme: form.theme,
       questions: form.questions,
     });
   } catch {
