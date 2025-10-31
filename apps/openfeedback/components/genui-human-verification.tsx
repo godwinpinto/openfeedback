@@ -279,9 +279,7 @@ export const GenUIHumanVerification: React.FC<GenUIHumanVerificationProps> = ({
       const promptText = `Does this photo show a person following this instruction: "${currentInstruction}"? Analyze the image carefully and respond with a JSON object containing:
 - "verified" (true if the person is following the instruction correctly, false otherwise)
 - "confidence" (a number between 0 and 1 representing how confident you are in your answer)
-- "reason" (if verified is false, provide a brief reason why the verification failed, e.g., "person is not covering mouth", "wrong gesture detected", etc.)
-
-IMPORTANT: If there are any other humans visible in the image besides the main person being verified, the verification must fail. Set "verified" to false and provide a reason indicating the presence of additional people in the image.`;
+- "reason" (if verified is false, provide a brief reason why the verification failed, e.g., "person is not covering mouth", "wrong gesture detected", etc.)`;
 
       // Response constraint JSON schema
       const responseSchema = {

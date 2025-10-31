@@ -8,6 +8,7 @@ import { GenUITextarea } from "@/components/genui-textarea";
 import { AIInput } from "@/components/genui-input";
 import { AISONNER_TONES, aiToast, Toaster } from "@/lib/genui-sonner";
 import { AISummarizerProvider, AISummarizerText, GenUISummarizerContent } from "@/components/genui-summarize-block";
+import { GenUIHumanVerification } from "@/components/genui-human-verification";
 
 export default function Home() {
   const [tone, setTone] = React.useState<string>("friendly");
@@ -222,7 +223,7 @@ export default function Home() {
                 <div className="space-y-2 text-sm text-muted-foreground">
                   <p>Test AI-powered human verification using camera and vision AI.</p>
                 </div>
-                {/* <AIHumanVerification
+                <GenUIHumanVerification
                   onVerified={(confidence) => {
                     console.log('Verified with confidence:', confidence);
                   }}
@@ -232,7 +233,7 @@ export default function Home() {
                   onError={(error) => {
                     console.error('Verification error:', error);
                   }}
-                /> */}
+                />
               </CardContent>
             </Card>
           </div>
