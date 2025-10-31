@@ -73,7 +73,8 @@ export function GenUII18nText({ text, language, showOption }: GenUII18nTextProps
           <span className="inline-flex items-center cursor-help underline decoration-dashed decoration-1 underline-offset-4">{text}</span>
         </TooltipTrigger>
         <TooltipContent>
-          {error ? `Error: ${error}` : (translatedText ?? (isLoading ? "Translating…" : ""))}
+          {/* {error ? `Error: ${error}` : (translatedText ?? (isLoading ? "Translating…" : ""))} */}
+          {translatedText ?? (isLoading ? "Translating…" : "")}
         </TooltipContent>
       </Tooltip>
     );
@@ -102,7 +103,7 @@ export function GenUII18nText({ text, language, showOption }: GenUII18nTextProps
           <Languages className="h-4 w-4" />
         </Button>
       )}
-      {error && <span className="ml-2 text-xs text-destructive">{error}</span>}
+      {/* {error && <span className="ml-2 text-xs text-destructive">{error}</span>} */}
     </span>
   );
 }
