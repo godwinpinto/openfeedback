@@ -142,7 +142,7 @@ CRITICAL: Generate ONLY ONE option label, not multiple options. Return a single 
                   className="h-8 text-sm"
                   containerClassName="flex-1"
                   placeholder="Enter option text"
-                  features={["compose", "improve", "fix-grammar", "translate", "auto-suggest"]}
+                  features={["compose", "improve", "fix-grammar", "translate"]}
                   translateTargets={["en", "fr", "es", "de", "hi", "ja", "zh-CN"]}
                   translateLanguageMap={{
                     en: 'English',
