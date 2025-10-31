@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/openfeedback/theme-provider";
+import { HeroHeader } from "@/components/openfeedback/header";
 import { GenUIProvider } from "@/components/genui-provider";
 
 const geistSans = Geist({
@@ -23,15 +25,73 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Check for missing origin trial tokens
+  if (!process.env.PROMPT_API_ORIGIN_TRIAL_TOKEN) {
+    console.log(
+      "⚠️ PROMPT_API_ORIGIN_TRIAL_TOKEN is not provided in environment variables"
+    );
+  }
+  if (!process.env.WRITER_API_ORIGIN_TRIAL_TOKEN) {
+    console.log(
+      "⚠️ WRITER_API_ORIGIN_TRIAL_TOKEN is not provided in environment variables"
+    );
+  }
+  if (!process.env.REWRITER_API_ORIGIN_TRIAL_TOKEN) {
+    console.log(
+      "⚠️ REWRITER_API_ORIGIN_TRIAL_TOKEN is not provided in environment variables"
+    );
+  }
+  if (!process.env.PROOFREADER_API_ORIGIN_TRIAL_TOKEN) {
+    console.log(
+      "⚠️ PROOFREADER_API_ORIGIN_TRIAL_TOKEN is not provided in environment variables"
+    );
+  }
+
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* Chrome Origin Trial tokens - one per API */}
+        {process.env.PROMPT_API_ORIGIN_TRIAL_TOKEN && (
+          <meta
+            httpEquiv="origin-trial"
+            content={process.env.PROMPT_API_ORIGIN_TRIAL_TOKEN}
+          />
+        )}
+        {process.env.WRITER_API_ORIGIN_TRIAL_TOKEN && (
+          <meta
+            httpEquiv="origin-trial"
+            content={process.env.WRITER_API_ORIGIN_TRIAL_TOKEN}
+          />
+        )}
+        {process.env.REWRITER_API_ORIGIN_TRIAL_TOKEN && (
+          <meta
+            httpEquiv="origin-trial"
+            content={process.env.REWRITER_API_ORIGIN_TRIAL_TOKEN}
+          />
+        )}
+        {process.env.PROOFREADER_API_ORIGIN_TRIAL_TOKEN && (
+          <meta
+            httpEquiv="origin-trial"
+            content={process.env.PROOFREADER_API_ORIGIN_TRIAL_TOKEN}
+          />
+        )}
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-                  <GenUIProvider enableSelectionSummarizer={true}>
-
-        {children}
-        </GenUIProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <GenUIProvider enableSelectionSummarizer={true}>
+            <HeroHeader />
+            {children}
+          </GenUIProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

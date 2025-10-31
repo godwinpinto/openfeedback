@@ -2,22 +2,18 @@
 
 import * as React from "react";
 import {
-  Checkbox,
-  Label,
   Field,
   FieldContent,
   FieldLabel,
   FieldDescription,
   FieldError,
-  Button,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  cn,
-} from "@shared-ui";
+} from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { Plus, Trash2 } from "lucide-react";
 

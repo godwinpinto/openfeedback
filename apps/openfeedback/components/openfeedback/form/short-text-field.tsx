@@ -2,13 +2,13 @@
 
 import * as React from "react";
 import {
-  Input,
   Field,
   FieldContent,
   FieldLabel,
   FieldDescription,
   FieldError,
-} from "@shared-ui";
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 
 // TypeScript Types
 export type ShortTextFieldProps = {

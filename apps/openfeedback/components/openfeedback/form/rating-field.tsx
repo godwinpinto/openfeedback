@@ -7,8 +7,8 @@ import {
   FieldLabel,
   FieldDescription,
   FieldError,
-  cn,
-} from "@shared-ui";
+} from "@/components/ui/field";
+import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
 
 // TypeScript Types

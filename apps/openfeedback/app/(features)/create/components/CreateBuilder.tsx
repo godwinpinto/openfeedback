@@ -2,28 +2,13 @@
 
 import * as React from 'react';
 import {
-  Button,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  Command,
-  CommandList,
-  CommandGroup,
-  CommandItem,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Input,
-  Textarea,
-  Switch,
-  Label,
-  cn,
-  CardFooter,
-  Badge,
-  Separator as SeparatorComponent,
-} from '@shared-ui';
+  Separator,
+} from '@/components/ui/separator';
+import {Badge} from '@/components/ui/badge';
+import {Button} from '@/components/ui/button';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import {Command, CommandList, CommandGroup, CommandItem} from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 import {
   Plus,
   Type,
@@ -37,22 +22,20 @@ import {
   Copy,
   Minus as SeparatorIcon,
 } from 'lucide-react';
-import { ShortTextFieldEdit, type ShortTextFieldProps } from '../../../../components/openfeedback/form/short-text-field';
-import { LongTextFieldEdit, type LongTextFieldProps } from '../../../../components/openfeedback/form/long-text-field';
-import { MultipleChoiceFieldEdit, type MultipleChoiceFieldProps } from '../../../../components/openfeedback/form/multiple-choice-field';
-import { RatingFieldEdit, type RatingFieldProps } from '../../../../components/openfeedback/form/rating-field';
-import { MultipleSelectFieldEdit, type MultipleSelectFieldProps } from '../../../../components/openfeedback/form/multiple-select-field';
-import { AssistantProvider, AssistantUI, useAssistantTool } from 'voiceable';
-import {
-  FEEDBACK_FORM_STORAGE_KEY,
-  type FeedbackQuestion,
-  type QuestionWithId,
-  type SeparatorItem,
-  parseStoredQuestions,
-  parseStoredForm,
-  serializeForm,
-} from '../../../lib/feedback-form';
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Button as DialogButton } from '@shared-ui';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+
+import { ShortTextFieldEdit, type ShortTextFieldProps } from '@/components/openfeedback/form/short-text-field';
+import { LongTextFieldEdit, type LongTextFieldProps } from '@/components/openfeedback/form/long-text-field';
+import { MultipleChoiceFieldEdit, type MultipleChoiceFieldProps } from '@/components/openfeedback/form/multiple-choice-field';
+import { RatingFieldEdit, type RatingFieldProps } from '@/components/openfeedback/form/rating-field';
+import { MultipleSelectFieldEdit, type MultipleSelectFieldProps } from '@/components/openfeedback/form/multiple-select-field';
+import { FEEDBACK_FORM_STORAGE_KEY, type FeedbackQuestion, type QuestionWithId, type SeparatorItem, parseStoredQuestions, parseStoredForm, serializeForm } from '@/lib/openfeedback/feedback-form';
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button as DialogButton } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 
 type QuestionType =
   | 'short_text'
@@ -152,56 +135,7 @@ export default function CreateBuilder() {
 
   const selectedOption = questionTypes.find((q) => q.type === selectedType);
 
-  // Register tools under the provider scope (component wrapped below)
-  useAssistantTool({
-    name: 'addQuestion',
-    description:
-      'Add a question to the form by type (short_text, long_text, multiple_choice, rating, multiple_select, separator)',
-    parameters: [{ name: 'type', type: 'string', description: 'Question type or label', required: true }],
-    handler: async ({ type }) => {
-      const normalized = String(type || '').toLowerCase().replace(/\s+/g, '_') as QuestionType;
-      if (!(['short_text', 'long_text', 'multiple_choice', 'rating', 'multiple_select', 'separator'] as const).includes(normalized as any)) return;
-      handleSelectType(normalized as QuestionType);
-    },
-  });
-  useAssistantTool({
-    name: 'deleteQuestion',
-    description: 'Delete a question by id',
-    parameters: [{ name: 'id', type: 'string', required: true }],
-    handler: async ({ id }) => {
-      handleDeleteQuestion(String(id));
-    },
-  });
-  useAssistantTool({
-    name: 'moveQuestion',
-    description: 'Move a question up or down',
-    parameters: [
-      { name: 'id', type: 'string', required: true },
-      { name: 'direction', type: 'string', required: true },
-    ],
-    handler: async ({ id, direction }) => {
-      handleMoveQuestion(String(id), String(direction) as any);
-    },
-  });
-  useAssistantTool({
-    name: 'duplicateQuestion',
-    description: 'Duplicate a question by id',
-    parameters: [{ name: 'id', type: 'string', required: true }],
-    handler: async ({ id }) => {
-      handleDuplicateQuestion(String(id));
-    },
-  });
-  useAssistantTool({
-    name: 'editQuestion',
-    description: 'Edit a question by id with updates',
-    parameters: [
-      { name: 'id', type: 'string', required: true },
-      { name: 'updates', type: 'object', required: true },
-    ],
-    handler: async ({ id, updates }) => {
-      handleUpdateQuestion(String(id), (updates || {}) as Partial<FeedbackQuestion>);
-    },
-  });
+  
 
   const handleSaveForm = () => {
     try {
@@ -297,7 +231,7 @@ export default function CreateBuilder() {
                 </Button>
               </div>
               <div className="relative flex-1 flex items-center justify-center">
-                <SeparatorComponent className="absolute inset-0" />
+                <Separator className="absolute inset-0" />
                 <span className="relative bg-background px-4 text-sm text-muted-foreground -mt-2">Page Break</span>
               </div>
               <div className="shrink-0 -mt-4">

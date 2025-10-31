@@ -1,11 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Button, Card, CardContent, Input, Textarea, Field, FieldLabel, FieldDescription, FieldError, Separator as SeparatorComponent } from "@shared-ui";
-import { FEEDBACK_FORM_STORAGE_KEY, FEEDBACK_RESPONSE_STORAGE_KEY, parseStoredForm, parseStoredResponse, serializeResponse, type QuestionWithId, isSeparatorQuestion } from "../../lib/feedback-form";
-import { MultipleChoiceFieldResponse } from "../../../components/openfeedback/form/multiple-choice-field";
-import { MultipleSelectFieldResponse } from "../../../components/openfeedback/form/multiple-select-field";
-import { RatingFieldResponse } from "../../../components/openfeedback/form/rating-field";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field";
+import { Separator } from "@/components/ui/separator";
+import { FEEDBACK_FORM_STORAGE_KEY, FEEDBACK_RESPONSE_STORAGE_KEY, parseStoredForm, parseStoredResponse, serializeResponse, type QuestionWithId, isSeparatorQuestion } from "@/lib/openfeedback/feedback-form";
+import { MultipleChoiceFieldResponse } from "@/components/openfeedback/form/multiple-choice-field";
+import { MultipleSelectFieldResponse } from "@/components/openfeedback/form/multiple-select-field";
+import { RatingFieldResponse } from "@/components/openfeedback/form/rating-field";
 
 type AnswersState = Record<string, string | string[] | number | undefined>;
 
@@ -232,13 +237,13 @@ export default function FeedbackPage() {
                     {headerDescription && (
                       <div className="text-muted-foreground">{headerDescription}</div>
                     )}
-                    <SeparatorComponent />
+                    <Separator />
                   </div>
                 )}
                 {(pages[currentPage] || []).map((q, idx, arr) => (
                   <div key={q.id} className="space-y-6">
                     {renderQuestion(q)}
-                    {idx < arr.length - 1 && <SeparatorComponent />}
+                    {idx < arr.length - 1 && <Separator />}
                   </div>
                 ))}
               </CardContent>

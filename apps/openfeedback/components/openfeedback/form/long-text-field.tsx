@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import {
-  Textarea,
   Field,
   FieldContent,
   FieldLabel,
   FieldDescription,
   FieldError,
-} from "@shared-ui";
+} from "@/components/ui/field";
+import { Textarea } from "@/components/ui/textarea";
+
 
 // TypeScript Types
 export type LongTextFieldProps = {
