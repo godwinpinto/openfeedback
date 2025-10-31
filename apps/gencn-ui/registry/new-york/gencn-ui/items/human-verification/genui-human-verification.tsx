@@ -558,7 +558,7 @@ export const GenUIHumanVerification: React.FC<GenUIHumanVerificationProps> = ({
   // `verifyImage` or `captureAndVerify`. This breaks the stale closure chain
   // and makes the callbacks more stable.
   React.useEffect(() => {
-    startCountdown.current = () => {
+    startCountdownRef.current = () => {
       if (countdownTimerRef.current) {
         clearInterval(countdownTimerRef.current);
       }
