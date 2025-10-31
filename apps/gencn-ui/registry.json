@@ -98,7 +98,7 @@
       },
       {
         "name": "sonner",
-        "type": "registry:lib",
+        "type": "registry:block",
         "title": "AI Sonner",
         "description": "AI-powered toast notifications using Sonner with automatic text rewriting and tone customization.",
         "dependencies": [
