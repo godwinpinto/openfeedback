@@ -52,6 +52,10 @@
           {
             "path": "registry/new-york/gencn-ui/items/shared/lib/rewriter.ts",
             "type": "registry:lib"
+          },
+          {
+            "path": "registry/new-york/gencn-ui/items/shared/lib/summarizer.ts",
+            "type": "registry:lib"
           }
         ]
       },
@@ -123,6 +127,34 @@
         "files": [
           {
             "path": "registry/new-york/gencn-ui/llm-status/genui-status.tsx",
+            "type": "registry:component"
+          }
+        ]
+      },
+      {
+        "name": "genui-textarea",
+        "type": "registry:component",
+        "title": "GenUI Textarea",
+        "description": "GenUI-powered textarea component with automatic text rewriting and tone customization.",
+        "dependencies": [
+          "react"
+        ],
+        "registryDependencies": [
+          "http://localhost:3000/r/genui-provider.json",
+          "textarea",
+          "input",
+          "button",
+          "spinner",
+          "dropdown-menu",
+          "dialog",
+          "alert",
+          "select",
+          "command",
+          "popover"
+        ],
+        "files": [
+          {
+            "path": "registry/new-york/gencn-ui/items/textarea/genui-textarea.tsx",
             "type": "registry:component"
           }
         ]
