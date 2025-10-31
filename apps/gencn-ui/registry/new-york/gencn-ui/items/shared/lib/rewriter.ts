@@ -5,11 +5,13 @@ import type { RewriterOptions, RewriteOptions } from '@/registry/new-york/gencn-
 export type RewriterAvailability = 'available' | 'downloadable' | 'unavailable' | null;
 
 export function isRewriterSupported(): boolean {
+	if (typeof self === 'undefined') return false;
 	return 'Rewriter' in self;
 }
 
 export async function checkRewriterAvailability(): Promise<RewriterAvailability> {
 	if (!isRewriterSupported()) return null;
+	if (typeof self === 'undefined') return null;
 	try {
 		const status = await (self as any).Rewriter.availability();
 		return status as RewriterAvailability;
@@ -44,6 +46,9 @@ export async function ensureRewriter(options?: RewriterOptions & { onProgress?: 
 		},
 	};
 
+	if (typeof self === 'undefined') {
+		throw new Error('Rewriter API is not available in this environment.');
+	}
 	const rewriter = await (self as any).Rewriter.create(createOptions);
 	return rewriter;
 }

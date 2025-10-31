@@ -426,6 +426,10 @@ export const GenUITextarea = React.forwardRef<HTMLTextAreaElement, GenUITextarea
           },
         } as any);
 
+        if (!translator) {
+          throw new Error('Failed to create translator. The language combination may not be supported by the Chrome Translator API.');
+        }
+
         // Prefer non-streaming; if streaming exists, we could support
         if (typeof translator.translateStreaming === 'function') {
           const stream = translator.translateStreaming(text, { signal: abortRef.current.signal });

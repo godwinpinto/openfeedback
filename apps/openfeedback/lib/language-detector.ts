@@ -5,11 +5,13 @@ import type { LanguageDetectorOptions, DetectedLanguage } from '@/lib/genui-type
 export type LanguageDetectorAvailability = 'available' | 'downloadable' | 'unavailable' | null;
 
 export function isLanguageDetectorSupported(): boolean {
+	if (typeof self === 'undefined') return false;
 	return 'LanguageDetector' in self;
 }
 
 export async function checkLanguageDetectorAvailability(): Promise<LanguageDetectorAvailability> {
 	if (!isLanguageDetectorSupported()) return null;
+	if (typeof self === 'undefined') return null;
 	try {
 		const status = await (self as any).LanguageDetector.availability();
 		return status as LanguageDetectorAvailability;
@@ -42,6 +44,9 @@ export async function ensureLanguageDetector(options?: LanguageDetectorOptions &
 		},
 	};
 
+	if (typeof self === 'undefined') {
+		throw new Error('Language Detector API is not available in this environment.');
+	}
 	const detector = await (self as any).LanguageDetector.create(createOptions);
 	return detector;
 }

@@ -5,11 +5,13 @@ import type { SummarizerOptions, SummarizeOptions } from '@/lib/genui-types';
 export type SummarizerAvailability = 'available' | 'downloadable' | 'unavailable' | null;
 
 export function isSummarizerSupported(): boolean {
+	if (typeof self === 'undefined') return false;
 	return 'Summarizer' in self;
 }
 
 export async function checkSummarizerAvailability(): Promise<SummarizerAvailability> {
 	if (!isSummarizerSupported()) return null;
+	if (typeof self === 'undefined') return null;
 	try {
 		const status = await (self as any).Summarizer.availability();
 		return status as SummarizerAvailability;
@@ -44,6 +46,9 @@ export async function ensureSummarizer(options?: SummarizerOptions & { onProgres
 		},
 	};
 
+	if (typeof self === 'undefined') {
+		throw new Error('Summarizer API is not available in this environment.');
+	}
 	const summarizer = await (self as any).Summarizer.create(createOptions);
 	return summarizer;
 }

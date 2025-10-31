@@ -5,11 +5,13 @@ import type { WriterOptions, WriteOptions } from '@/registry/new-york/gencn-ui/i
 export type WriterAvailability = 'available' | 'downloadable' | 'unavailable' | null;
 
 export function isWriterSupported(): boolean {
+	if (typeof self === 'undefined') return false;
 	return 'Writer' in self;
 }
 
 export async function checkWriterAvailability(): Promise<WriterAvailability> {
 	if (!isWriterSupported()) return null;
+	if (typeof self === 'undefined') return null;
 	try {
 		const status = await (self as any).Writer.availability();
 		return status as WriterAvailability;
@@ -44,6 +46,9 @@ export async function ensureWriter(options?: WriterOptions & { onProgress?: (per
 		},
 	};
 
+	if (typeof self === 'undefined') {
+		throw new Error('Writer API is not available in this environment.');
+	}
 	const writer = await (self as any).Writer.create(createOptions);
 	return writer;
 }

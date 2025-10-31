@@ -13,11 +13,13 @@ export interface TranslateOptions {
 }
 
 export function isTranslatorSupported(): boolean {
+	if (typeof self === 'undefined') return false;
 	return 'Translator' in self;
 }
 
 export async function checkTranslatorAvailability(): Promise<TranslatorAvailability> {
 	if (!isTranslatorSupported()) return null;
+	if (typeof self === 'undefined') return null;
 	try {
 		const status = await (self as any).Translator.availability();
 		return status as TranslatorAvailability;
@@ -53,6 +55,9 @@ export async function ensureTranslator(options: TranslatorOptions & { onProgress
         },
     };
 
+    if (typeof self === 'undefined') {
+        throw new Error('Translator API is not available in this environment.');
+    }
     try {
         const translator = await (self as any).Translator.create(createOptions);
         return translator;

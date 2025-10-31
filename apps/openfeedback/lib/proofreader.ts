@@ -19,11 +19,13 @@ export interface ProofreadResult {
 }
 
 export function isProofreaderSupported(): boolean {
+	if (typeof self === 'undefined') return false;
 	return 'Proofreader' in self;
 }
 
 export async function checkProofreaderAvailability(): Promise<ProofreaderAvailability> {
 	if (!isProofreaderSupported()) return null;
+	if (typeof self === 'undefined') return null;
 	try {
 		const status = await (self as any).Proofreader.availability();
 		return status as ProofreaderAvailability;
@@ -56,6 +58,9 @@ export async function ensureProofreader(options: ProofreaderCreateOptions): Prom
 		},
 	};
 
+	if (typeof self === 'undefined') {
+		throw new Error('Proofreader API is not available in this environment.');
+	}
 	const proofreader = await (self as any).Proofreader.create(createOptions);
 	return proofreader;
 }
