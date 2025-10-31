@@ -38,6 +38,7 @@ import { Button as DialogButton } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { GenUIInput } from '@/components/genui-input';
 import { GenUITextarea } from '@/components/genui-textarea';
+import { genUIToast } from '@/lib/genui-sonner';
 
 type QuestionType =
   | 'short_text'
@@ -139,7 +140,7 @@ export default function CreateBuilder() {
 
   
 
-  const handleSaveForm = () => {
+  const handleSaveForm = async () => {
     try {
       const payload = serializeForm({
         savedAt: new Date().toISOString(),
@@ -151,6 +152,11 @@ export default function CreateBuilder() {
         localStorage.setItem(FEEDBACK_FORM_STORAGE_KEY, payload);
       }
       setIsUnsaved(false);
+      
+      // Show funny success toast
+      await genUIToast.success('Form saved successfully!', {
+        tone: 'funny',
+      });
     } catch (error) {
       // no-op: best effort local save
     }
