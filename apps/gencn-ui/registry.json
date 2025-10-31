@@ -174,7 +174,30 @@
         ],
         "files": [
           {
-            "path": "registry/new-york/gencn-ui/i18n/I18nText.tsx",
+            "path": "registry/new-york/gencn-ui/items/i18n/genui-i18n-text.tsx",
+            "type": "registry:component"
+          }
+        ]
+      },
+      {
+        "name": "genui-summarize-block",
+        "type": "registry:component",
+        "title": "GenUI Summarize Block",
+        "description": "GenUI-powered summarize block component with automatic text rewriting and tone customization.",
+        "dependencies": [
+          "react"
+        ],
+        "registryDependencies": [
+          "http://localhost:3000/r/genui-provider.json",
+          "tooltip",
+          "button",
+          "alert",
+          "card",
+          "skeleton"
+        ],
+        "files": [
+          {
+            "path": "registry/new-york/gencn-ui/items/summarize-block/genui-summarize-block.tsx",
             "type": "registry:component"
           }
         ]
