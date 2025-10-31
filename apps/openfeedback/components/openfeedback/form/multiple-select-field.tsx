@@ -11,11 +11,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { Plus, Trash2 } from "lucide-react";
+import { GenUIInput } from "@/components/genui-input";
 
 // TypeScript Types
 export type MultipleSelectDisplayMode = "list" | "grid-2" | "grid-3";
@@ -112,35 +112,77 @@ export const MultipleSelectFieldEdit = ({
           </Select>
         </div>
         <div className="space-y-2">
-          {field.options.map((option, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <Checkbox
-                id={`${fieldId}-${index}`}
-                checked={value?.includes(option) || false}
-                onCheckedChange={(checked) => handleChange(option, checked as boolean)}
-              />
-              <Input
-                value={option}
-                onChange={(e) => {
-                  const newOptions = [...field.options];
-                  newOptions[index] = e.target.value;
-                  onUpdateField?.({ options: newOptions });
-                }}
-                className="flex-1 h-8 text-sm"
-                placeholder="Enter option text"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleRemoveOption(index)}
-                disabled={field.options.length <= 2}
-                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-              >
-                <Trash2 className="size-3" />
-              </Button>
-            </div>
-          ))}
+          {field.options.map((option, index) => {
+            const sharedContext = `Question type: multiple_select.
+
+Question title: "${field.questionTitle}"
+${field.questionHint ? `Question description/hint: "${field.questionHint}"` : ''}
+
+Current option label (for this specific option): "${option}"
+Existing options: ${field.options.filter((_, idx) => idx !== index).map(opt => `"${opt}"`).join(', ') || '(none)'}
+
+This is an option label for a multiple select question option. Requirements: Keep it concise (under 10 words), use clear and simple language, make it a single short phrase or word that represents a distinct choice, and ensure it is easy to understand at a glance. The option should be specific and can be selected alongside other options.
+
+CRITICAL: Generate ONLY ONE option label, not multiple options. Return a single short text label that fits the context of the question.`;
+
+            return (
+              <div key={index} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${fieldId}-${index}`}
+                  checked={value?.includes(option) || false}
+                  onCheckedChange={(checked) => handleChange(option, checked as boolean)}
+                />
+                <GenUIInput
+                  value={option}
+                  onChange={(e) => {
+                    const newOptions = [...field.options];
+                    newOptions[index] = e.target.value;
+                    onUpdateField?.({ options: newOptions });
+                  }}
+                  className="h-8 text-sm"
+                  containerClassName="flex-1"
+                  placeholder="Enter option text"
+                  features={["compose", "improve", "fix-grammar", "translate", "auto-suggest"]}
+                  translateTargets={["en", "fr", "es", "de", "hi", "ja", "zh-CN"]}
+                  translateLanguageMap={{
+                    en: 'English',
+                    fr: 'French',
+                    es: 'Spanish',
+                    de: 'German',
+                    hi: 'Hindi',
+                    ja: 'Japanese',
+                    'zh-CN': 'Chinese (Simplified)'
+                  }}
+                  placeholderPrompt="Describe what you want"
+                  writerOptions={{
+                    tone: 'neutral',
+                    format: 'plain-text',
+                    length: 'short',
+                    sharedContext,
+                    expectedInputLanguages: ['en'],
+                    expectedContextLanguages: ['en'],
+                    outputLanguage: 'en',
+                  }}
+                  onAccept={(text) => {
+                    const newOptions = [...field.options];
+                    newOptions[index] = text;
+                    onUpdateField?.({ options: newOptions });
+                  }}
+                  onAIError={(e) => console.error('AI input error:', e)}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemoveOption(index)}
+                  disabled={field.options.length <= 2}
+                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="size-3" />
+                </Button>
+              </div>
+            );
+          })}
         </div>
         <Button
           type="button"
