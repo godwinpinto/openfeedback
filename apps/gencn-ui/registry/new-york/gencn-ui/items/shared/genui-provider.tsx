@@ -1,10 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { SummarizeSelection } from "./SummarizeSelection";
-import { SummarizeOptions, SummarizerOptions } from "@/registry/new-york/gencn-ui/items/shared/block/lib/gui-types";
-import { WriterOptions, RewriterOptions, WriteOptions, RewriteOptions } from "@/registry/new-york/gencn-ui/items/shared/block/lib/gui-types";
-
+import { SummarizeSelection } from "./genui-summarize-selection";
+import {
+  SummarizeOptions,
+  SummarizerOptions,
+} from "@/registry/new-york/gencn-ui/items/shared/genui-types";
+import {
+  WriterOptions,
+  RewriterOptions,
+  WriteOptions,
+  RewriteOptions,
+} from "@/registry/new-york/gencn-ui/items/shared/genui-types";
 
 // Type definitions for Chrome Language Detector API
 export interface LanguageDetectorOptions {
@@ -43,7 +50,7 @@ export interface LanguageModelAvailabilityStatus {
   ) => Promise<AvailabilityStatus>;
 }
 
-export interface VoiceableContextValue extends LanguageModelAvailabilityStatus {
+export interface GenUIContextValue extends LanguageModelAvailabilityStatus {
   // State
   isSupported: boolean | null;
   isWriterSupported: boolean | null;
@@ -97,11 +104,11 @@ export interface VoiceableContextValue extends LanguageModelAvailabilityStatus {
   resetError: () => void;
 }
 
-const VoiceableContext = React.createContext<VoiceableContextValue | undefined>(
+const GenUIContext = React.createContext<GenUIContextValue | undefined>(
   undefined
 );
 
-export interface VoiceableProviderProps {
+export interface GenUIProviderProps {
   children: React.ReactNode;
   defaultOptions?: SummarizerOptions;
   defaultWriterOptions?: WriterOptions;
@@ -110,14 +117,14 @@ export interface VoiceableProviderProps {
   enableSelectionSummarizer?: boolean;
 }
 
-export function VoiceableProvider({
+export function GenUIProvider({
   children,
   defaultOptions,
   defaultWriterOptions,
   defaultLanguageDetectorOptions,
   defaultRewriterOptions,
   enableSelectionSummarizer = false,
-}: VoiceableProviderProps) {
+}: GenUIProviderProps) {
   const [isSupported, setIsSupported] = React.useState<boolean | null>(null);
   const [isWriterSupported, setIsWriterSupported] = React.useState<
     boolean | null
@@ -882,7 +889,7 @@ export function VoiceableProvider({
     setError(null);
   }, []);
 
-  const value: VoiceableContextValue = React.useMemo(
+  const value: GenUIContextValue = React.useMemo(
     () => ({
       // Summarizer API
       isSupported,
@@ -960,21 +967,21 @@ export function VoiceableProvider({
   );
 
   return (
-    <VoiceableContext.Provider value={value}>
+    <GenUIContext.Provider value={value}>
       {children}
       {enableSelectionSummarizer ? (
         // Lazy import to avoid SSR issues if any consumer renders on server
         <SummarizeSelection defaultOptions={defaultOptions} />
       ) : null}
-    </VoiceableContext.Provider>
+    </GenUIContext.Provider>
   );
 }
 
 // Hook to use Voiceable context
-export function useVoiceable(): VoiceableContextValue {
-  const context = React.useContext(VoiceableContext);
+export function useGenUI(): GenUIContextValue {
+  const context = React.useContext(GenUIContext);
   if (context === undefined) {
-    throw new Error("useVoiceable must be used within a VoiceableProvider");
+    throw new Error("useGenUI must be used within a GenUIProvider");
   }
   return context;
 }

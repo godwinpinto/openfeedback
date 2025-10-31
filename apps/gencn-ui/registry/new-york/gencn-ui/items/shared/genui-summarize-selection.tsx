@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { Sparkles, Repeat2 } from 'lucide-react';
-import { type UseSummarizerOptions, ButtonPosition, SummarizeSelectionProps } from '@/registry/new-york/gencn-ui/items/shared/block/lib/gui-types';
-import { useSummarizer } from '@/registry/new-york/gencn-ui/items/shared/hooks/useSummarizer';
+import { type UseSummarizerOptions, ButtonPosition, SummarizeSelectionProps } from '@/registry/new-york/gencn-ui/items/shared/genui-types';
+import { useSummarizer } from '@/registry/new-york/gencn-ui/items/shared/use-genui-summarizer';
 
 
 

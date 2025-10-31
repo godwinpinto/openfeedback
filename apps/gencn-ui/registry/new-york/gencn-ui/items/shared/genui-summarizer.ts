@@ -1,6 +1,6 @@
 'use client';
 
-import type { SummarizerOptions, SummarizeOptions } from '@/registry/new-york/gencn-ui/items/shared/block/lib/gui-types';
+import type { SummarizerOptions, SummarizeOptions } from '@/registry/new-york/gencn-ui/items/shared/genui-types';
 
 export type SummarizerAvailability = 'available' | 'downloadable' | 'unavailable' | null;
 

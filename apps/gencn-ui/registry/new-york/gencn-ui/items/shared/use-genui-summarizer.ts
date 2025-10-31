@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import type { UseSummarizerOptions, SummarizeOptions } from '@/registry/new-york/gencn-ui/items/shared/block/lib/gui-types';
-import { ensureSummarizer } from '@/registry/new-york/gencn-ui/items/shared/block/lib/summarizer';
+import type { UseSummarizerOptions, SummarizeOptions } from '@/registry/new-york/gencn-ui/items/shared/genui-types';
+import { ensureSummarizer } from '@/registry/new-york/gencn-ui/items/shared/genui-summarizer';
 
 
 

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-genui-summarizer",
+  "type": "registry:lib",
+  "title": "useSummarizer Hook",
+  "description": "React hook for using the Chrome Summarizer API with loading states and error handling.",
+  "dependencies": [
+    "react"
+  ],
+  "registryDependencies": [
+    "http://localhost:3000/r/genui-summarizer.json"
+  ],
+  "files": [
+    {
+      "path": "registry/new-york/gencn-ui/items/shared/use-genui-summarizer.ts",
+      "content": "'use client';\n\nimport * as React from 'react';\nimport type { UseSummarizerOptions, SummarizeOptions } from '@/registry/new-york/gencn-ui/items/shared/genui-types';\nimport { ensureSummarizer } from '@/registry/new-york/gencn-ui/items/shared/genui-summarizer';\n\n\n\nexport interface UseSummarizerReturn {\n  isLoading: boolean;\n  error: Error | null;\n  progress: number | null;\n  result: string;\n  run: (text: string, options?: SummarizeOptions) => Promise<string>;\n  runStreaming: (text: string, options?: SummarizeOptions) => Promise<string>;\n  stop: () => void;\n  reset: () => void;\n}\n\nexport function useSummarizer(options?: UseSummarizerOptions): UseSummarizerReturn {\n  const [isLoading, setIsLoading] = React.useState(false);\n  const [error, setError] = React.useState<Error | null>(null);\n  const [progress, setProgress] = React.useState<number | null>(null);\n  const [result, setResult] = React.useState('');\n  const abortRef = React.useRef<AbortController | null>(null);\n  const summarizerRef = React.useRef<any>(null);\n\n  const stop = React.useCallback(() => {\n    abortRef.current?.abort();\n    abortRef.current = null;\n  }, []);\n\n  const reset = React.useCallback(() => {\n    setIsLoading(false);\n    setError(null);\n    setProgress(null);\n    setResult('');\n  }, []);\n\n  const getSummarizer = React.useCallback(async () => {\n    if (summarizerRef.current) return summarizerRef.current;\n    summarizerRef.current = await ensureSummarizer({\n      ...options,\n      onProgress: (p) => setProgress(p),\n    });\n    return summarizerRef.current;\n  }, [options]);\n\n  const run = React.useCallback(async (text: string, summarizeOptions?: SummarizeOptions) => {\n    setIsLoading(true);\n    setError(null);\n    setResult('');\n    try {\n      const summarizer = await getSummarizer();\n      const res = await summarizer.summarize(text, {\n        context: summarizeOptions?.context ?? options?.sharedContext ?? options?.context,\n      });\n      setResult(res);\n      return res as string;\n    } catch (e) {\n      setError(e as Error);\n      throw e;\n    } finally {\n      setIsLoading(false);\n    }\n  }, [getSummarizer, options]);\n\n  const runStreaming = React.useCallback(async (text: string, summarizeOptions?: SummarizeOptions) => {\n    setIsLoading(true);\n    setError(null);\n    setResult('');\n    abortRef.current?.abort();\n    abortRef.current = new AbortController();\n    try {\n      const summarizer = await getSummarizer();\n      const stream = summarizer.summarizeStreaming(text, {\n        context: summarizeOptions?.context ?? options?.sharedContext ?? options?.context,\n        signal: abortRef.current.signal,\n      });\n      let acc = '';\n      for await (const chunk of stream) {\n        acc += chunk;\n        setResult(acc);\n      }\n      return acc;\n    } catch (e) {\n      if ((e as any)?.name === 'AbortError') return result;\n      setError(e as Error);\n      throw e;\n    } finally {\n      setIsLoading(false);\n    }\n  }, [getSummarizer, options, result]);\n\n  React.useEffect(() => () => stop(), [stop]);\n\n  return { isLoading, error, progress, result, run, runStreaming, stop, reset };\n}\n\n\n",
+      "type": "registry:lib"
+    }
+  ]
+}
