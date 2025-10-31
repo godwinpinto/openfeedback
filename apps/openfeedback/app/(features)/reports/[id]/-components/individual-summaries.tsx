@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import type { SubmissionData } from './types'
 import type { QuestionWithId } from '@/lib/openfeedback/feedback-form'
 import { getAnswers } from './utils'
+import { GenUISummarizerContent, GenUISummarizerProvider, GenUISummarizerText } from '@/components/genui-summarize-block'
 
 interface IndividualSummariesProps {
   feedbackResponseData: SubmissionData[]
@@ -74,9 +75,12 @@ function RespondentCard({
         <CardTitle>Respondent {respondentIndex + 1}</CardTitle>
       </CardHeader>
       <CardContent>
+      <GenUISummarizerProvider displayMode="static" type="tldr" length="medium" format="plain-text">
+        <GenUISummarizerContent title="Individual Summary" className="mb-6" />
         <pre className="text-sm whitespace-pre-wrap font-mono bg-muted p-4 rounded-md overflow-x-auto">
-          {markdownContent}
+          <GenUISummarizerText text={markdownContent} as="div" />
         </pre>
+        </GenUISummarizerProvider>
       </CardContent>
     </Card>
   )
@@ -175,7 +179,7 @@ export function IndividualSummaries({
       </div>
 
       {/* Respondent Cards */}
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {paginatedData.map((submission, index) => (
           <RespondentCard
             key={index}
