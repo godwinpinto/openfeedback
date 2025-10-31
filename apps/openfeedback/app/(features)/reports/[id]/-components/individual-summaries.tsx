@@ -46,6 +46,28 @@ function formatQuestionType(type: string): string {
   return type.replace('_', ' ').replace('short text', 'text').replace('long text', 'text')
 }
 
+// Format a single submission into markdown
+function formatSubmissionToMarkdown(
+  submission: SubmissionData,
+  questions: QuestionWithId[],
+  respondentIndex: number
+): string {
+  const answers = getAnswers(submission.responseData)
+  
+  const submissionMarkdown = questions
+    .map((question) => {
+      const questionTitle = (question as any).questionTitle || 'Untitled Question'
+      const answer = answers[question.id]
+      const formattedAnswer = formatResponseValue(answer, question)
+      const questionType = formatQuestionType(question.type)
+      
+      return `# ${questionTitle} [${questionType}]\n${formattedAnswer}`
+    })
+    .join('\n\n')
+  
+  return `## Respondent ${respondentIndex + 1}\n\n${submissionMarkdown}`
+}
+
 interface CachedSummaryDisplayProps {
   cachedResult: string
   title?: string
@@ -225,6 +247,15 @@ export function IndividualSummaries({
     summaryCache.current.set(key, result)
   }
 
+  // Format all paginated submissions into a single markdown string for overall summary
+  const overallMarkdown = useMemo(() => {
+    return paginatedData
+      .map((submission, index) => 
+        formatSubmissionToMarkdown(submission, questions, startIndex + index)
+      )
+      .join('\n\n---\n\n')
+  }, [paginatedData, questions, startIndex])
+
   const handlePageSizeChange = (value: string) => {
     setPageSize(Number(value))
     setCurrentPage(1) // Reset to first page when page size changes
@@ -301,6 +332,12 @@ export function IndividualSummaries({
           </Button>
         </div>
       </div>
+
+      {/* Overall Summary */}
+      <GenUISummarizerProvider displayMode="static" type="tldr" length="medium" format="plain-text">
+        <GenUISummarizerContent title="Overall Summary" className="mb-6" />
+        <GenUISummarizerText text={overallMarkdown} as="div" className="hidden" />
+      </GenUISummarizerProvider>
 
       {/* Respondent Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
