@@ -27,6 +27,7 @@ import {
   ExternalLink,
   History,
   X,
+  Eye,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -37,7 +38,7 @@ import { LongTextFieldEdit, type LongTextFieldProps } from '@/components/openfee
 import { MultipleChoiceFieldEdit, type MultipleChoiceFieldProps } from '@/components/openfeedback/form/multiple-choice-field';
 import { RatingFieldEdit, type RatingFieldProps } from '@/components/openfeedback/form/rating-field';
 import { MultipleSelectFieldEdit, type MultipleSelectFieldProps } from '@/components/openfeedback/form/multiple-select-field';
-import { FEEDBACK_FORM_STORAGE_KEY, type FeedbackQuestion, type QuestionWithId, type SeparatorItem, parseStoredQuestions, parseStoredForm, serializeForm } from '@/lib/openfeedback/feedback-form';
+import { FEEDBACK_FORM_STORAGE_KEY, FEEDBACK_RESPONSE_STORAGE_KEY, type FeedbackQuestion, type QuestionWithId, type SeparatorItem, parseStoredQuestions, parseStoredForm, serializeForm } from '@/lib/openfeedback/feedback-form';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -49,6 +50,7 @@ import { launchFeedbackForm } from '../actions';
 import { Rocket } from 'lucide-react';
 import { ThemeColorPicker } from '@/components/ui/theme-color-picker';
 import { saveFeedbackLink, getAllFeedbackLinks, deleteFeedbackLink, clearAllFeedbackLinks, type SavedFeedbackLink } from '@/lib/openfeedback/feedback-links-db';
+import { FeedbackFormCore } from '@/app/(features)/feedback/components/feedback-form-core';
 
 type QuestionType =
   | 'short_text'
@@ -109,6 +111,7 @@ export default function CreateBuilder() {
   const [copiedReportLink, setCopiedReportLink] = React.useState(false);
   const [savedLinks, setSavedLinks] = React.useState<SavedFeedbackLink[]>([]);
   const [savedLinksPopoverOpen, setSavedLinksPopoverOpen] = React.useState(false);
+  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = React.useState(false);
 
   const handleSelectType = (type: QuestionType) => {
     const newQuestion: QuestionWithId = {
@@ -929,6 +932,21 @@ export default function CreateBuilder() {
                 <div className={cn("text-sm", isUnsaved ? "text-muted-foreground" : "text-green-600 dark:text-green-400")}>{isUnsaved ? "Unsaved changes" : "All changes saved"}</div>
               </div>
               <div className="flex items-center gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={async () => {
+                    // Save form before preview
+                    await handleSaveForm();
+                    // Open preview modal
+                    setIsPreviewDialogOpen(true);
+                  }}
+                  data-assistant-label="Preview Form"
+                  disabled={questions.length === 0}
+                >
+                  <Eye className="size-4 mr-2" />
+                  Preview
+                </Button>
                 <Button size="sm" variant="default" onClick={handleSaveForm} data-assistant-label="Save Form">
                   Save
                 </Button>
@@ -982,6 +1000,31 @@ export default function CreateBuilder() {
           </div>
         </div>
       </div>
+
+      {/* Preview Dialog */}
+      <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
+        <DialogContent className="max-w-none w-screen min-w-full h-screen min-h-full max-h-screen rounded-none fixed inset-0 translate-x-0 translate-y-0 p-0 overflow-hidden m-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Form Preview</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto h-full min-h-full w-full min-w-full">
+            <FeedbackFormCore
+              formData={{
+                formTitle,
+                formDescription,
+                questions,
+                theme: {
+                  lightPrimary,
+                  darkPrimary,
+                },
+              }}
+              mode="preview"
+              storageKey={FEEDBACK_RESPONSE_STORAGE_KEY}
+              onClose={() => setIsPreviewDialogOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

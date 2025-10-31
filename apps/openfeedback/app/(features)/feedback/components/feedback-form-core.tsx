@@ -25,6 +25,7 @@ import { genUIToast } from "@/lib/genui-sonner";
 import { GenUIHumanVerification } from "@/components/genui-human-verification";
 import { isFormSubmitted, markFormAsSubmitted, unmarkFormAsSubmitted } from "@/lib/openfeedback/submitted-forms";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { X } from "lucide-react";
 
 type AnswersState = Record<string, string | string[] | number | undefined>;
 
@@ -36,6 +37,7 @@ interface FeedbackFormCoreProps {
   storageKey?: string; // For localStorage key
   initialAnswers?: AnswersState;
   initialPage?: number;
+  onClose?: () => void; // Callback for closing preview
 }
 
 export function FeedbackFormCore({
@@ -46,6 +48,7 @@ export function FeedbackFormCore({
   storageKey,
   initialAnswers = {},
   initialPage = 0,
+  onClose,
 }: FeedbackFormCoreProps) {
   const [questions] = React.useState<QuestionWithId[]>(formData.questions || []);
   const [answers, setAnswers] = React.useState<AnswersState>(initialAnswers);
@@ -420,6 +423,61 @@ export function FeedbackFormCore({
     ? "Thanks! Your feedback has been recorded locally."
     : "Thanks! Your feedback has been submitted successfully.";
 
+  // Apply theme colors to override primary CSS variables
+  React.useEffect(() => {
+    if (!formData.theme) return;
+    
+    const styleId = 'feedback-form-theme-override';
+    let styleElement = document.getElementById(styleId) as HTMLStyleElement;
+    
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = styleId;
+      document.head.appendChild(styleElement);
+    }
+    
+    let css = '';
+    
+    // Apply light mode primary color
+    if (formData.theme.lightPrimary) {
+      css += `:root { --primary: ${formData.theme.lightPrimary} !important; }\n`;
+      
+      // Auto-generate primary-foreground based on brightness
+      const hex = formData.theme.lightPrimary.replace('#', '');
+      if (hex.length === 6) {
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        const foregroundColor = brightness > 128 ? '#000000' : '#ffffff';
+        css += `:root { --primary-foreground: ${foregroundColor} !important; }\n`;
+      }
+    }
+    
+    // Apply dark mode primary color
+    if (formData.theme.darkPrimary) {
+      css += `.dark { --primary: ${formData.theme.darkPrimary} !important; }\n`;
+      
+      // Auto-generate dark mode primary-foreground
+      const hex = formData.theme.darkPrimary.replace('#', '');
+      if (hex.length === 6) {
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        const foregroundColor = brightness > 128 ? '#000000' : '#ffffff';
+        css += `.dark { --primary-foreground: ${foregroundColor} !important; }\n`;
+      }
+    }
+    
+    styleElement.textContent = css;
+    
+    return () => {
+      const existing = document.getElementById(styleId);
+      if (existing) existing.remove();
+    };
+  }, [formData.theme]);
+
   return (
     <>
       <div className="relative min-h-screen pt-16 pb-24">
@@ -521,6 +579,17 @@ export function FeedbackFormCore({
                       Page {Math.min(currentPage + 1, pages.length)} of {pages.length}
                     </div>
                     <div className="ml-auto flex items-center gap-2">
+                      {mode === 'preview' && onClose && (
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={onClose}
+                          disabled={isSubmitting}
+                        >
+                          <X className="size-4 mr-2" />
+                          Close Preview
+                        </Button>
+                      )}
                       {storageKey && (
                         <Button 
                           type="button" 
