@@ -9,7 +9,7 @@
     "lucide-react"
   ],
   "registryDependencies": [
-    "use-summarizer"
+    "http://localhost:3000/r/use-summarizer.json"
   ],
   "files": [
     {

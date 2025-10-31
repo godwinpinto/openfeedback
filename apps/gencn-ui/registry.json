@@ -50,7 +50,7 @@
           "react"
         ],
         "registryDependencies": [
-          "summarizer"
+          "http://localhost:3000/r/summarizer.json"
         ],
         "files": [
           {
@@ -69,7 +69,7 @@
           "lucide-react"
         ],
         "registryDependencies": [
-          "use-summarizer"
+          "http://localhost:3000/r/use-summarizer.json"
         ],
         "files": [
           {
@@ -87,12 +87,12 @@
           "react"
         ],
         "registryDependencies": [
-          "summarize-selection"
+          "http://localhost:3000/r/summarize-selection.json"
         ],
         "files": [
           {
             "path": "registry/new-york/gencn-ui/items/shared/block/components/GUIProvider.tsx",
-            "type": "registry:component"
+            "type": "registry:block"
           }
         ]
       },
@@ -106,14 +106,14 @@
           "react"
         ],
         "registryDependencies": [
-          "rewriter",
-          "gui-provider",
-          "summarize-selection"
+          "http://localhost:3000/r/rewriter.json",
+          "http://localhost:3000/r/gui-provider.json",
+          "http://localhost:3000/r/summarize-selection.json"
         ],
         "files": [
           {
             "path": "registry/new-york/gencn-ui/items/toast/lib/sonner.ts",
-            "type": "registry:lib"
+            "type": "registry:block"
           }
         ]
       }

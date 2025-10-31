@@ -9,9 +9,9 @@
     "react"
   ],
   "registryDependencies": [
-    "rewriter",
-    "gui-provider",
-    "summarize-selection"
+    "http://localhost:3000/r/rewriter.json",
+    "http://localhost:3000/r/gui-provider.json",
+    "http://localhost:3000/r/summarize-selection.json"
   ],
   "files": [
     {
