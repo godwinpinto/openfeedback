@@ -177,9 +177,17 @@ export const HeroHeader = () => {
               <Link
                 href="/"
                 aria-label="home"
-                className="flex items-center space-x-2 cursor-pointer"
+                className="flex flex-col items-start gap-1 cursor-pointer"
               >
-                <Logo />
+                <span className="text-xl font-semibold tracking-tight text-gray-950 dark:text-white" style={{ fontFamily: 'var(--font-nunito), sans-serif' }}>
+                  <span className="text-blue-600">O</span>pen<span className="text-blue-600">F</span>eedback
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">built by</span>
+                  <div className="relative w-10 h-2 shrink-0">
+                    <Logo className="w-10 h-2" />
+                  </div>
+                </div>
               </Link>
 
               <div className="flex items-center gap-2 lg:hidden">
@@ -219,8 +227,8 @@ export const HeroHeader = () => {
               </Button>
 
               <Button asChild variant="default" size="sm">
-                <Link href={process.env.NEXT_PUBLIC_GET_STARTED_URL ?? "/"}>
-                  <span>Visit Website</span>
+                <Link href={process.env.NEXT_PUBLIC_GET_STARTED_URL ?? "/"} target="_blank">
+                  <span>Visit encatch</span>
                 </Link>
               </Button>
             </div>

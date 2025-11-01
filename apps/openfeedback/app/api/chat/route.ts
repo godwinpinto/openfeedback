@@ -1,6 +1,7 @@
 import { google } from '@ai-sdk/google';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 
+
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 

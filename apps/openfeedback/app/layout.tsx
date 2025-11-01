@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Nunito } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/openfeedback/theme-provider";
 import { HeroHeader } from "@/components/openfeedback/header";
 import { GenUIProvider } from "@/components/genui-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,6 +14,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const nunito = Nunito({
+  variable: "--font-nunito",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -79,7 +86,7 @@ export default function RootLayout({
         )}
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${nunito.variable} font-sans text-gray-950 dark:text-white antialiased [overflow-anchor:none]`}
       >
         <ThemeProvider
           attribute="class"
@@ -90,6 +97,7 @@ export default function RootLayout({
           <GenUIProvider enableSelectionSummarizer={true}>
             <HeroHeader />
             {children}
+            <Toaster />
           </GenUIProvider>
         </ThemeProvider>
       </body>
