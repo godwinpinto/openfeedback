@@ -16,6 +16,7 @@
       "genui-summarize-block",
       "genui-human-verification",
       "---Hooks---",
-      "use-genui-summarizer"
+      "use-genui-summarizer",
+      "use-genui-hybrid-llm"
     ]
   }

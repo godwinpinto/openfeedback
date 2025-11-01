@@ -1,0 +1,245 @@
+---
+title: use-genui-hybrid-llm
+description: Hook for seamlessly switching between local Chrome AI and remote API with automatic availability detection and message history preservation.
+---
+
+## Overview
+
+The `use-genui-hybrid-llm` hook seamlessly integrates with the [Vercel AI SDK](https://sdk.vercel.ai/docs) and extends the `useChat` hook to provide a hybrid AI chat experience. It automatically switches between local Chrome AI (using the LanguageModel API) and remote API endpoints while maintaining full compatibility with Vercel AI SDK's text chat message format and APIs.
+
+This hook is built on top of `useChat` from `@ai-sdk/react`, so it returns all the same properties and methods you're familiar with, plus additional functionality for transport switching. It intelligently detects browser support, checks model availability, and preserves message history when switching between transport modes.
+
+## Installation
+
+<Tabs items={['CLI', 'Manual']}>
+
+<Tab value="CLI">
+
+```ts tab="npm"
+npx shadcn@latest add https://gencn-ui.encatch.com/r/use-genui-hybrid-llm.json
+```
+
+```ts tab="pnpm"
+pnpm dlx shadcn@latest add https://gencn-ui.encatch.com/r/use-genui-hybrid-llm.json
+```
+
+```ts tab="yarn"
+yarn shadcn@latest add https://gencn-ui.encatch.com/r/use-genui-hybrid-llm.json
+```
+
+```ts tab="bun"
+bunx --bun shadcn@latest add https://gencn-ui.encatch.com/r/use-genui-hybrid-llm.json
+```
+
+</Tab>
+
+<Tab value="Manual">
+
+<CodeFile path="registry/new-york/gencn-ui/items/hybrid-llm/use-genui-hybrid-llm.ts" language="ts" />
+
+</Tab>
+
+</Tabs>
+
+## Usage
+
+### Basic Example
+
+```tsx
+import { useGenUIHybridLLM } from '@/hooks/use-genui-hybrid-llm';
+
+function ChatComponent() {
+  const {
+    messages,
+    sendMessage,
+    status,
+    transportMode,
+    isLocalSupported,
+    localAvailability,
+    setTransportMode,
+  } = useGenUIHybridLLM({
+    autoUseLocalIfAvailable: true, // Automatically use local if available
+    chatIdPrefix: 'my-chat',
+  });
+
+  return (
+    <div>
+      {/* Chat UI */}
+      <div>
+        {messages.map((message) => (
+          <div key={message.id}>
+            {message.role}: {message.parts[0]?.text}
+          </div>
+        ))}
+      </div>
+      
+      {/* Transport Mode Toggle */}
+      {isLocalSupported && (
+        <button onClick={() => setTransportMode(transportMode === 'local' ? 'remote' : 'local')}>
+          {transportMode === 'local' ? 'Switch to Remote' : 'Switch to Local'}
+        </button>
+      )}
+      
+      {/* Availability Status */}
+      {localAvailability === 'available' && (
+        <span>Local AI Available</span>
+      )}
+      {localAvailability === 'downloadable' && (
+        <span>Local AI Downloadable</span>
+      )}
+      
+      <button 
+        onClick={() => sendMessage({ text: 'Hello!' })}
+        disabled={status !== 'ready'}
+      >
+        Send
+      </button>
+    </div>
+  );
+}
+```
+
+### Advanced Configuration
+
+```tsx
+const {
+  messages,
+  sendMessage,
+  status,
+  error,
+  stop,
+  transportMode,
+  isLocalSupported,
+  localAvailability,
+  setTransportMode,
+} = useGenUIHybridLLM({
+  // Initial transport mode
+  initialMode: 'remote',
+  
+  // Auto-use local if available
+  autoUseLocalIfAvailable: true,
+  
+  // Local transport options
+  localTransportOptions: {
+    system: 'You are a helpful assistant.',
+    temperature: 0.7,
+    expectedInputs: [{ type: 'text', languages: ['en'] }],
+    expectedOutputs: [{ type: 'text', languages: ['en'] }],
+    onProgress: (percent) => {
+      console.log(`Download progress: ${percent}%`);
+    },
+  },
+  
+  // Remote API endpoint
+  remoteApiEndpoint: '/api/chat',
+  
+  // Chat ID prefix (actual ID will be prefixed with transport mode)
+  chatIdPrefix: 'my-chat',
+  
+  // Additional useChat options
+  initialMessages: [],
+  onFinish: (message) => {
+    console.log('Message finished:', message);
+  },
+});
+```
+
+## Vercel AI SDK Integration
+
+This hook is a drop-in replacement for `useChat` from `@ai-sdk/react`. It seamlessly integrates with the Vercel AI SDK and provides all the same functionality:
+
+- **Full `useChat` API**: Returns all properties and methods from `useChat` including `messages`, `sendMessage`, `status`, `error`, `stop`, `isLoading`, and more
+- **Text Chat Messages**: Fully compatible with Vercel AI SDK's `UIMessage` format for text chat messages
+- **Streaming Support**: Supports streaming responses just like `useChat`
+- **Transport Abstraction**: Automatically manages transport switching between local and remote without changing your code
+
+You can use this hook anywhere you would use `useChat` - it maintains the exact same interface while adding hybrid transport capabilities.
+
+## API Reference
+
+### Options
+
+<AutoTypeTable path="registry/new-york/gencn-ui/items/hybrid-llm/use-genui-hybrid-llm.ts" name="UseGenUIHybridLLMOptions" />
+
+The options extend `UseChatOptions` from `@ai-sdk/react`, so you can pass all the same options you would to `useChat`, plus the additional transport-related options.
+
+### Returns
+
+<AutoTypeTable path="registry/new-york/gencn-ui/items/hybrid-llm/use-genui-hybrid-llm.ts" name="UseGenUIHybridLLMReturn" />
+
+The return value extends `UseChatHelpers` from `@ai-sdk/react`, providing all standard `useChat` functionality plus the additional transport mode properties and methods.
+
+## Transport Modes
+
+### Local Mode (`'local'`)
+- Uses Chrome's LanguageModel API for on-device processing
+- Requires Chrome browser with LanguageModel API support
+- Privacy-preserving: data stays on device
+- No API costs
+- May require model download on first use
+
+### Remote Mode (`'remote'`)
+- Uses traditional HTTP API endpoint
+- Works in all browsers
+- Requires network connection
+- Data is sent to remote server
+
+## Availability States
+
+The `localAvailability` state can be one of:
+
+- **`'available'`**: Local AI is ready to use
+- **`'downloadable'`**: Local AI model is available but needs to be downloaded
+- **`'unavailable'`**: Local AI is not available (not supported or not installed)
+- **`'checking'`**: Checking availability (initial state)
+
+## Message History Preservation
+
+One of the key features of this hook is that it automatically preserves message history when switching between transport modes. This means users can:
+
+1. Start a conversation in remote mode
+2. Switch to local mode
+3. Continue the conversation with full context preserved
+4. Switch back to remote mode if needed
+5. All previous messages remain intact
+
+## Browser Requirements
+
+### Local Mode Requirements
+- Chrome browser (version 126+)
+- Chrome LanguageModel API support
+- Sufficient device resources for model execution
+
+### Remote Mode Requirements
+- Any modern browser
+- Network connection to API endpoint
+
+## Examples
+
+### Complete Chat Interface
+
+See the [test page implementation](https://github.com/your-repo/blob/main/apps/openfeedback/app/(features)/test/page.tsx) for a complete example of a chat interface with transport switching.
+
+### Conditional UI Based on Availability
+
+```tsx
+{localAvailability === 'available' && (
+  <Badge>Local AI Ready</Badge>
+)}
+
+{localAvailability === 'downloadable' && (
+  <Badge variant="outline">Local AI Downloadable</Badge>
+)}
+
+{!isLocalSupported && (
+  <p className="text-sm text-muted-foreground">
+    Local AI not supported in this browser
+  </p>
+)}
+```
+
+## Dependencies
+
+- `@ai-sdk/react`
+- `ai`
+

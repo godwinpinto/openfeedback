@@ -222,6 +222,26 @@
             "type": "registry:component"
           }
         ]
+      },
+      {
+        "name": "use-genui-hybrid-llm",
+        "type": "registry:hook",
+        "title": "GenUI Hybrid LLM",
+        "description": "GenUI-powered hybrid LLM component with automatic text rewriting and tone customization.",
+        "dependencies": [
+          "@ai-sdk/react",
+          "ai"
+        ],
+        "files": [
+          {
+            "path": "registry/new-york/gencn-ui/items/hybrid-llm/use-genui-hybrid-llm.ts",
+            "type": "registry:hook"
+          },
+          {
+            "path": "registry/new-york/gencn-ui/items/hybrid-llm/genui-local-chat-transport.ts",
+            "type": "registry:lib"
+          }
+        ]
       }
     ]
   }
