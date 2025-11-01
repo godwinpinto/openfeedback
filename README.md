@@ -4,6 +4,11 @@
 
 An open-source, AI-powered feedback platform that's powerful, easy to use, and built with transparency and extensibility in mind.
 
+## 🔗 Links
+
+- **OpenFeedback**: [openfeedback.encatch.com](https://openfeedback.encatch.com)
+- **GenCN-UI**: [gencn-ui.encatch.com](https://gencn-ui.encatch.com)
+
 ## 🌟 Features
 
 ### Create
