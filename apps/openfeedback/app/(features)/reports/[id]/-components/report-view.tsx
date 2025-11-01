@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import type { QuestionWithId } from '@/lib/openfeedback/feedback-form'
 import { isSeparatorQuestion } from '@/lib/openfeedback/feedback-form'
 import type { ReportViewProps } from './types'
@@ -10,6 +11,11 @@ import { FeedbackCountChart } from './feedback-count-chart'
 import { IndividualSummaries } from './individual-summaries'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { isQuestionnaireData, getAnswers, analyzeQuestionResponses, getFormMetadata } from './utils'
+
+// Dynamically import chatbot to avoid SSR hydration issues
+const ReportChatbot = dynamic(() => import('./report-chatbot').then(mod => ({ default: mod.ReportChatbot })), {
+  ssr: false,
+})
 
 export function ReportView({
   questionnaireFormData,
@@ -74,6 +80,13 @@ export function ReportView({
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Floating Chatbot */}
+      <ReportChatbot
+        questions={questions}
+        feedbackResponseData={feedbackResponseData}
+        reportId={reportId}
+      />
     </div>
   )
 }
