@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "../gencn-ui/registry/new-york/gencn-ui/items/hybrid-llm/use-genui-hybrid-llm.ts", "../gencn-ui/registry/new-york/gencn-ui/items/hybrid-llm/genui-local-chat-transport.ts"  ],
+  ],
   "exclude": ["node_modules"]
 }

@@ -114,7 +114,7 @@ export function analyzeQuestionResponses(
       data,
       totalResponses: questionAnswers.length,
       average: questionAnswers.length > 0
-        ? questionAnswers.reduce((sum, a) => sum + (typeof a === 'number' ? a : Number(a) || 0), 0) / questionAnswers.length
+        ? questionAnswers.reduce((sum: number, a) => sum + (typeof a === 'number' ? a : Number(a) || 0), 0) / questionAnswers.length
         : 0,
     }
   }
